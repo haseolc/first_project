@@ -1,0 +1,22 @@
+# --- Terraform 관련 ---
+.terraform/                # 테라폼 설치 시 다운로드된 플러그인 (용량 큼)
+*.tfstate                  # 인프라 상태 정보 (보안 위험)
+*.tfstate.backup           # 상태 정보 백업 파일
+*.tfvars                   # 사용자 정의 변수 파일 (민감 정보 포함 가능성)
+.terraform.lock.hcl        # 가급적 무시 (팀원 간 OS 다를 때 충돌 방지 [ 현재는 통일 되어 있지만 혹시 모를 상황을 대비)
+
+# --- Ansible 관련 ---
+*.retry                    # 앤서블 실행 실패 시 생성되는 임시 파일
+inventory.ini              # 서버 IP가 노출되므로 제외 (GitHub Actions에서 자동 생성 예정)
+
+# --- 보안 및 키 파일 ---
+*.pem                      # AWS SSH 키 페어
+*.key                      # 각종 비밀키
+.env                       # 환경 변수 설정 파일
+secrets.yml                # 암호화되지 않은 비밀번호 파일
+
+# --- OS 및 IDE 관련(기타) ---
+.DS_Store                  # macOS 시스템 파일
+Thumbs.db                  # Windows 시스템 파일
+.vscode/                   # VS Code 개인 설정 
+.idea/                     # IntelliJ/PyCharm 설정
