@@ -1,0 +1,11 @@
+---
+- name: "7팀 클라우드 자동화 및 보안 구축"
+  hosts: k3s_nodes  # inventory.ini에 정의된 그룹명
+  become: true       # sudo 권한 사용
+  become_method: sudo  
+  become_user: root    
+  roles:
+    - common
+    - k3s
+    - helm
+    - nginx_waf

@@ -1,0 +1,66 @@
+---
+# 1. 이전 설치 시도 시 생성되었을 수 있는 불완전한 바이너리 제거 ( 불필요하긴 함)
+- name: "기존 K3s 바이너리 제거 (재설치 보장)"
+  ansible.builtin.file:
+    path: /usr/local/bin/k3s
+    state: absent
+
+# 2. K3s 설치 실행
+# INSTALL_K3S_SKIP_SELINUX_RPM=true: SELinux 정책 버전 충돌 문제를 우회합니다.
+#  k3s-selinux가 하는 일과 생략 시 발생하는 문제
+
+# SELinux(Security-Enhanced Linux)란? 컨테이너가 호스트 OS의 파일이나 자원에 함부로 접근하지 못하게 하는 "강력한 격리벽"입니다. 
+# k3s-selinux 패키지는 K3s 컨테이너 전용 '격리 규칙'을 제공하여 
+
+# 생략 시 문제: 컨테이너가 해킹당했을 때, 공격자가 컨테이너를 탈출해 호스트 OS(EC2)의 내부 파일에 접근하기가 조금 더 쉬워집니다. 
+# 즉, 컨테이너 간의 격리나 호스트 보호 장벽이 하나 줄어드는 셈입니다.
+
+# 그러나 Amazon Linux 2는 기본적으로 SELinux가 Permissive(로그만 남기고 차단은 안 함) 또는 Disabled 상태인 경우가 많습니다.
+# 호스트 OS 자체가 SELinux를 강력하게 강제(Enforcing)하고 있지 않다면, K3s용 패키지를 설치해도 실제 차단 효과는 미비할 것입니다
+
+- name: "K3s 설치 실행 (SELinux 설치 건너뛰기 및 Traefik 비활성화)"
+  ansible.builtin.shell: |
+    curl -sfL https://get.k3s.io | INSTALL_K3S_SKIP_SELINUX_RPM=true INSTALL_K3S_EXEC="--disable traefik" sh -
+  register: k3s_install_output
+
+
+# 3. 설치 로그 확인 (디버깅용) - 불필요, 주석 처리 가능
+- name: "K3s 설치 결과 출력"
+  ansible.builtin.debug:
+    var: k3s_install_output.stdout_lines
+
+# 4. 설정 파일(kubeconfig)이 생성될 때까지 대기
+- name: "k3s.yaml 설정 파일 생성 확인 (최대 2분)"
+  ansible.builtin.wait_for:
+    path: /etc/rancher/k3s/k3s.yaml
+    state: present
+    timeout: 120
+
+# 5. ec2-user가 sudo 없이 kubectl을 사용할 수 있도록 권한 설정
+# 하단에는 ssh로 접속 후 k3s 확인 용 작업 수행을 위한 코드포함
+# 확인용 예시 코드는 check_ansible.md 파일에 예시 코드 포함
+- name: "ec2-user용 kubeconfig 디렉토리 생성"
+  ansible.builtin.file:
+    path: /home/ec2-user/.kube
+    state: directory
+    owner: ec2-user
+    group: ec2-user
+    mode: '0755'
+
+- name: "kubeconfig 파일 복사 및 권한 부여"
+  ansible.builtin.shell: |
+    cp /etc/rancher/k3s/k3s.yaml /home/ec2-user/.kube/config
+    chown ec2-user:ec2-user /home/ec2-user/.kube/config
+    chmod 600 /home/ec2-user/.kube/config
+
+
+- name: "ec2-user의 .bashrc에 KUBECONFIG 경로 추가"
+  ansible.builtin.lineinfile:
+    path: /home/ec2-user/.bashrc
+    line: 'export KUBECONFIG=$HOME/.kube/config'
+    state: present
+
+- name: "bashrc 적용 (현재 세션)"
+  ansible.builtin.shell: source /home/ec2-user/.bashrc
+  args:
+    executable: /bin/bash

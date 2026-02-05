@@ -1,0 +1,29 @@
+---
+- name: "Nginx Ingress Helm 레포지토리 추가"
+  kubernetes.core.helm_repository:
+    name: ingress-nginx
+    repo_url: "https://kubernetes.github.io/ingress-nginx"
+
+- name: "HostNetwork 모드로 ModSecurity WAF 배포"
+  kubernetes.core.helm:
+    name: nginx-waf
+    chart_ref: ingress-nginx/ingress-nginx
+    release_namespace: ingress-nginx
+    create_namespace: true
+    kubeconfig: "/etc/rancher/k3s/k3s.yaml"
+    values:
+      controller:
+        # ★ 핵심 설정: EC2의 네트워크를 직접 사용 (80, 443 점유)
+        # 사유 : k3s 재설치(ec2 삭제 후 재생성 시) 포트번호가 할당 되는게 매번 달라짐 따라서 80번 443번 포트를 직접 점유하도록 설정
+        hostNetwork: true
+        dnsPolicy: ClusterFirstWithHostNet
+        kind: DaemonSet # 모든 노드에 보안 엔진을 배치
+        
+        # ModSecurity 활성화
+        config:
+          enable-modsecurity: "true"
+          enable-owasp-modsecurity-crs: "true"
+        
+        # HostNetwork 사용 시 Service 타입은 ClusterIP로 충분함
+        service:
+          type: ClusterIP

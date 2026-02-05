@@ -1,0 +1,43 @@
+---
+# 1. 기존에 잘못 설치되었을 수 있는 파일 제거 (새로운 ec2 인스턴스에선 불필요하긴 함)
+- name: "기존 Helm 파일 제거"
+  ansible.builtin.file:
+    path: /usr/local/bin/helm
+    state: absent
+
+# 2. Helm 바이너리 직접 다운로드 및 압축 해제
+# 공식 스크립트 대신 직접 다운로드하여 PATH 이슈를 회피합니다.
+- name: "Helm 바이너리 다운로드 및 압축 해제"
+  ansible.builtin.unarchive:
+    src: https://get.helm.sh/helm-v3.17.0-linux-amd64.tar.gz # 버전은 최신으로 조정 가능
+    dest: /tmp
+    remote_src: yes
+
+# 3. 해제된 바이너리를 실행 경로로 이동
+- name: "Helm 실행 파일을 /usr/local/bin으로 이동"
+  ansible.builtin.copy:
+    src: /tmp/linux-amd64/helm
+    dest: /usr/local/bin/helm
+    mode: '0755'
+    remote_src: yes
+
+# 4. 설치 확인 (전체 경로를 사용하여 확인)
+- name: "Helm 설치 확인"
+  ansible.builtin.command: /usr/local/bin/helm version
+  register: helm_version_output
+
+- name: "Helm 버전 출력"
+  ansible.builtin.debug:
+    var: helm_version_output.stdout
+
+# 이전 단계(바이너리 이동) 다음에 추가
+- name: "Helm 실행 파일을 /usr/bin으로 심볼릭 링크 연결"
+  ansible.builtin.file:
+    src: /usr/local/bin/helm
+    dest: /usr/bin/helm
+    state: link
+
+- name: "Helm 실행 권한 최종 확인"
+  ansible.builtin.file:
+    path: /usr/local/bin/helm
+    mode: '0755'

@@ -1,0 +1,21 @@
+---
+- name: "시스템 패키지 강제 설치 (shell 방식)"
+  ansible.builtin.shell: | 
+    sudo yum install -y git python3 python3-pip libselinux-python3
+  register: yum_shell_result
+  changed_when: "'Complete!' in yum_shell_result.stdout"
+
+# 위 작업이 성공하면 앤서블이 환경을 인식하기 시작합니다.
+# 이후 작업은 기존대로 진행합니다.
+- name: "pip3 최신 버전으로 업그레이드"
+  ansible.builtin.pip:
+    name: pip
+    state: latest
+    executable: pip3
+
+- name: "앤서블 K3s 모듈 사용을 위한 파이썬 라이브러리 설치"
+  ansible.builtin.pip:
+    name: 
+      - kubernetes
+      - PyYAML
+    executable: pip3
