@@ -1,8 +1,9 @@
 name: 7th-room-project-deploy
 
 on:
-  push:
-    branches: [main]
+  #push:
+  # branches: [main]
+  workflow_dispatch:
 
 jobs:
   #도커 빌드 및 푸시
