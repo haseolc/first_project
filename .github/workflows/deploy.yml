@@ -1,73 +1,73 @@
-# name: 7th-room-project-deploy
+name: 7th-room-project-deploy
 
-# on:
-#   push:
-#     branches: [main]
+on:
+  push:
+    branches: [main]
 
-# jobs:
-#   #도커 빌드 및 푸시
-#   #docker:
+jobs:
+  #도커 빌드 및 푸시
+  #docker:
 
-#   #
-#   terraform:
-#     runs-on: ubuntu-latest
-#     outputs:
-#       EC2_PUBLIC_IP: ${{ steps.apply.outputs.EC2_PUBLIC_IP }}
-#     steps:
-#       - uses: actions/checkout@v4
+  #
+  terraform:
+    runs-on: ubuntu-latest
+    outputs:
+      EC2_PUBLIC_IP: ${{ steps.apply.outputs.EC2_PUBLIC_IP }}
+    steps:
+      - uses: actions/checkout@v4
    
-#       - name: Terraform Running Start
-#         uses: hashicorp/setup-terraform@v3
-#         with:
-#           terraform_version: 1.14.4
+      - name: Terraform Running Start
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.14.4
 
-#       - name: Terraform Init & plan & apply
-#         id: apply
-#         env:
-#           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#         run: |
-#           cd terraform
-#           terraform init
-#           terraform plan
-#           terraform apply -auto-approve
-#           echo "EC2_PUBLIC_IP=$(terraform output -raw room7_public_ip)" >> $GITHUB_OUTPUT 
-#   deploy:
-#     needs: terraform
-#     runs-on: ubuntu-latest
-#     steps:
-#       - uses: actions/checkout@v4
+      - name: Terraform Init & plan & apply
+        id: apply
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          cd terraform
+          terraform init
+          terraform plan
+          terraform apply -auto-approve
+          echo "EC2_PUBLIC_IP=$(terraform output -raw room7_public_ip)" >> $GITHUB_OUTPUT 
+  deploy:
+    needs: terraform
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
         
-#       # 1. SSH 키 설정 (절대 경로 및 멀티라인 처리)
-#       - name: Set up SSH key
-#         run: |
-#           mkdir -p ~/.ssh
-#           # 비밀키 내용을 파일로 저장 (따옴표로 감싸서 줄바꿈 보존)
-#           echo "${{ secrets.SSH_PRIVATE_KEY }}" > /home/runner/.ssh/id_rsa
-#           chmod 600 /home/runner/.ssh/id_rsa
+      # 1. SSH 키 설정 (절대 경로 및 멀티라인 처리)
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          # 비밀키 내용을 파일로 저장 (따옴표로 감싸서 줄바꿈 보존)
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /home/runner/.ssh/id_rsa
+          chmod 600 /home/runner/.ssh/id_rsa
           
-#           # 서버 부팅 대기 (잠시 기다려야 SSH가 뜹니다)
-#           sleep 20
+          # 서버 부팅 대기 (잠시 기다려야 SSH가 뜹니다)
+          sleep 20
           
-#           # 서버 지문 등록 (EC2_PUBLIC_IP 대문자 주의)
-#           ssh-keyscan -H ${{ needs.terraform.outputs.EC2_PUBLIC_IP }} >> ~/.ssh/known_hosts
+          # 서버 지문 등록 (EC2_PUBLIC_IP 대문자 주의)
+          ssh-keyscan -H ${{ needs.terraform.outputs.EC2_PUBLIC_IP }} >> ~/.ssh/known_hosts
 
-#       # 2. Inventory 파일 생성 (절대 경로 사용)
-#       - name: Create Ansible inventory file
-#         run: |
-#          cd ansible
-#          echo "[k3s_cluster]" > inventory.ini
-#          # ~/.ssh 대신 /home/runner/.ssh 절대 경로 사용
-#          echo "${{ needs.terraform.outputs.EC2_PUBLIC_IP }} ansible_user=ec2-user ansible_ssh_private_key_file=/home/runner/.ssh/id_rsa" >> inventory.ini
+      # 2. Inventory 파일 생성 (절대 경로 사용)
+      - name: Create Ansible inventory file
+        run: |
+         cd ansible
+         echo "[k3s_cluster]" > inventory.ini
+         # ~/.ssh 대신 /home/runner/.ssh 절대 경로 사용
+         echo "${{ needs.terraform.outputs.EC2_PUBLIC_IP }} ansible_user=ec2-user ansible_ssh_private_key_file=/home/runner/.ssh/id_rsa" >> inventory.ini
 
-#       # 3. 앤서블 실행
-#       - name: Ansible Running Start
-#         env:
-#           ANSIBLE_HOST_KEY_CHECKING: "False"
-#         run: |
-#           cd ansible
-#           ansible-playbook -i inventory.ini site.yml
+      # 3. 앤서블 실행
+      - name: Ansible Running Start
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+        run: |
+          cd ansible
+          ansible-playbook -i inventory.ini site.yml
 
-#       #ansible 설치 후 k3s 클러스터 배포
-#       #-name: k3s cluster deploy
-#       # run: |
+      #ansible 설치 후 k3s 클러스터 배포
+      #-name: k3s cluster deploy
+      # run: |
