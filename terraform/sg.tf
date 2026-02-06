@@ -12,7 +12,7 @@ resource "aws_security_group" "sg_7th_room" { # 그룹명: 7th-room-sg
     protocol    = "tcp"                      # TCP 프로토콜
     #cidr_blocks = ["0.0.0.0/0"]              # 모든 IP 허용
     #-> 개인 주소 수기 입력 예정 
-    cidr_blocks = ["121.142.94.150/32"]
+    cidr_blocks = ["0.0.0.0/0"]
     # 네이버에서 "내 IP 주소" 검색 후 0.0.0.0 부분에 입력
   }
 
