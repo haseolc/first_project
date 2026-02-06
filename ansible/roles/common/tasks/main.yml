@@ -1,5 +1,4 @@
 ---
-
 - name: "스왑 메모리 설정 (메모리 부족 방지)"
   shell: |
     if [ ! -f /swapfile ]; then
