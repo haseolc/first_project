@@ -10,10 +10,7 @@ resource "aws_security_group" "sg_7th_room" { # 그룹명: 7th-room-sg
     from_port   = 22                         # SSH 포트
     to_port     = 22
     protocol    = "tcp"                      # TCP 프로토콜
-    #cidr_blocks = ["0.0.0.0/0"]              # 모든 IP 허용
-    #-> 개인 주소 수기 입력 예정 
-    cidr_blocks = ["0.0.0.0/0"]
-    # 네이버에서 "내 IP 주소" 검색 후 0.0.0.0 부분에 입력
+    cidr_blocks = ["0.0.0.0/0"]              # 모든 IP 허용
   }
 
   egress {                                   # 나가는 트래픽 허용
@@ -46,11 +43,8 @@ resource "aws_security_group" "web-sg" {     # 그룹명: web-sg
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = [data.aws_vpc.default.cidr_block] # 내부에서 오는 트래픽 허용
-    #외부에서 접속 불능
-    #로컬 호스트 안될듯?, vpc 에 접속 후 사용 가능
-    #테스트 시 안될시
-    #cidr_blocks = ["0.0.0.0/0"] # 모든 IP 허용
+    cidr_blocks = ["0.0.0.0/0"] 
+    description = "Allow external HTTP for WAF testing"
   }
 
 # HTTPS (WAF 입구)
@@ -58,11 +52,8 @@ resource "aws_security_group" "web-sg" {     # 그룹명: web-sg
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = [data.aws_vpc.default.cidr_block] # 내부에서 오는 트래픽 허용
-    #외부에서 접속 불능
-    #로컬 호스트 안될듯?, vpc 에 접속 후 사용 가능
-    #테스트 시 안될시
-    #cidr_blocks = ["0.0.0.0/0"] # 모든 IP 허용
+    cidr_blocks = ["0.0.0.0/0"] 
+    description = "Allow external HTTPS for WAF testing"
   }
 
   # K3s 내부 통신 (Flannel CNI) - 노드 간 통신 필수

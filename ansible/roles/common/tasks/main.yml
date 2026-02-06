@@ -1,32 +1,18 @@
 ---
-- name: "스왑 메모리 설정 (메모리 부족 방지)"
-  shell: |
-    if [ ! -f /swapfile ]; then
-      fallocate -l 2G /swapfile
-      chmod 600 /swapfile
-      mkswap /swapfile
-      swapon /swapfile
-      echo '/swapfile none swap sw 0 0' >> /etc/fstab
-    fi
-  become: true
+# 1. 앤서블의 파이썬 엔진을 거치지 않고 직접 패키지 설치 (Raw)
+- name: "시스템 기본 패키지 설치 (Raw)"
+  ansible.builtin.raw: sudo yum install -y python3 python3-pip git libselinux-python3
+  changed_when: false
 
-- name: "시스템 패키지 강제 설치 (shell 방식)"
-  ansible.builtin.shell: | 
-    sudo yum install -y git python3 python3-pip libselinux-python3
-  register: yum_shell_result
-  changed_when: "'Complete!' in yum_shell_result.stdout"
+# 2. 파이썬 3.7 환경에서도 잘 돌아가는 특정 버전의 라이브러리 설치 (Raw)
+# 최신 kubernetes 라이브러리는 3.7을 지원 안 하므로 버전을 낮춰서 설치합니다.
+- name: "앤서블 라이브러리 강제 설치 (Raw CLI)"
+  ansible.builtin.raw: |
+    sudo pip3 install --upgrade pip && \
+    sudo pip3 install 'kubernetes<25.0.0' 'PyYAML<6.0.0'
+  changed_when: false
 
-# 위 작업이 성공하면 앤서블이 환경을 인식하기 시작합니다.
-# 이후 작업은 기존대로 진행합니다.
-- name: "pip3 최신 버전으로 업그레이드"
-  ansible.builtin.pip:
-    name: pip
-    state: latest
-    executable: pip3
-
-- name: "앤서블 K3s 모듈 사용을 위한 파이썬 라이브러리 설치"
-  ansible.builtin.pip:
-    name: 
-      - kubernetes
-      - PyYAML
-    executable: pip3
+# 3. 이후 작업에서 파이썬 경로 때문에 에러 나는 것 방지
+- name: "인터프리터 경로 고정"
+  ansible.builtin.set_fact:
+    ansible_python_interpreter: /usr/bin/python3

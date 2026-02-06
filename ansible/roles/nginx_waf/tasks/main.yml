@@ -1,29 +1,66 @@
 ---
-- name: "Nginx Ingress Helm 레포지토리 추가"
-  kubernetes.core.helm_repository:
-    name: ingress-nginx
-    repo_url: "https://kubernetes.github.io/ingress-nginx"
+# 1. Nginx Ingress 컨트롤러 설치 (WAF 옵션 포함)
+- name: "Nginx Ingress WAF 설치 (Helm CLI 직접 실행 - Raw)"
+  ansible.builtin.raw: |
+    /usr/local/bin/helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+    /usr/local/bin/helm repo update
+    /usr/local/bin/helm upgrade --install nginx-waf ingress-nginx/ingress-nginx \
+      --namespace ingress-nginx --create-namespace \
+      --kubeconfig /etc/rancher/k3s/k3s.yaml \
+      --set controller.config.enable-modsecurity=true \
+      --set controller.config.enable-owasp-modsecurity-crs=true \
+      --set controller.hostNetwork=true \
+      --set controller.dnsPolicy=ClusterFirstWithHostNet \
+      --set controller.kind=DaemonSet \
+      --set controller.service.type=ClusterIP \
+      --set controller.admissionWebhooks.enabled=false
+  changed_when: false
 
-- name: "HostNetwork 모드로 ModSecurity WAF 배포"
-  kubernetes.core.helm:
-    name: nginx-waf
-    chart_ref: ingress-nginx/ingress-nginx
-    release_namespace: ingress-nginx
-    create_namespace: true
-    kubeconfig: "/etc/rancher/k3s/k3s.yaml"
-    values:
-      controller:
-        # ★ 핵심 설정: EC2의 네트워크를 직접 사용 (80, 443 점유)
-        # 사유 : k3s 재설치(ec2 삭제 후 재생성 시) 포트번호가 할당 되는게 매번 달라짐 따라서 80번 443번 포트를 직접 점유하도록 설정
-        hostNetwork: true
-        dnsPolicy: ClusterFirstWithHostNet
-        kind: DaemonSet # 모든 노드에 보안 엔진을 배치
-        
-        # ModSecurity 활성화
-        config:
-          enable-modsecurity: "true"
-          enable-owasp-modsecurity-crs: "true"
-        
-        # HostNetwork 사용 시 Service 타입은 ClusterIP로 충분함
-        service:
-          type: ClusterIP
+# 2. 컨트롤러가 완전히 뜰 때까지 잠시 대기
+- name: "Nginx 컨트롤러 부팅 대기"
+  ansible.builtin.raw: sleep 30
+  changed_when: false
+
+# 3. HTTPS 테스트용 자체 서명 인증서 생성 및 K3s 등록
+- name: "자체 서명 인증서 생성 및 Secret 등록 (Raw)"
+  ansible.builtin.raw: |
+    if [ ! -f /tmp/tls.key ]; then
+      openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+        -keyout /tmp/tls.key -out /tmp/tls.crt \
+        -subj "/CN=7th-room-waf"
+    fi
+    /usr/local/bin/kubectl create secret tls waf-tls-secret \
+      --cert=/tmp/tls.crt --key=/tmp/tls.key \
+      -n default --dry-run=client -o yaml | /usr/local/bin/kubectl apply -f -
+  changed_when: false
+
+# 4. ★ 생략 가능: 모든 트래픽을 WAF로 강제 통과시키는 Catch-all 규칙 생성
+# 본 규칙은 http/https 테스트를 위해 작업 한 코드 문제 생
+- name: "WAF 차단 규칙(Ingress) 배포 (Raw)"
+  ansible.builtin.raw: |
+    cat <<EOF | /usr/local/bin/kubectl apply -f -
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: waf-final-gate
+      annotations:
+        nginx.ingress.kubernetes.io/enable-modsecurity: "true"
+        nginx.ingress.kubernetes.io/modsecurity-snippet: |
+          SecRuleEngine On
+          SecDefaultAction "phase:1,deny,log,status:403"
+    spec:
+      ingressClassName: nginx
+      tls:
+      - secretName: waf-tls-secret # 443 포트 보호용
+      rules:
+      - http: # host를 적지 않아서 모든 IP 접속에 대응
+          paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: dummy-service
+                port:
+                  number: 80
+    EOF
+  changed_when: false
