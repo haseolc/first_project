@@ -1,4 +1,16 @@
 ---
+
+- name: "스왑 메모리 설정 (메모리 부족 방지)"
+  shell: |
+    if [ ! -f /swapfile ]; then
+      fallocate -l 2G /swapfile
+      chmod 600 /swapfile
+      mkswap /swapfile
+      swapon /swapfile
+      echo '/swapfile none swap sw 0 0' >> /etc/fstab
+    fi
+  become: true
+
 - name: "시스템 패키지 강제 설치 (shell 방식)"
   ansible.builtin.shell: | 
     sudo yum install -y git python3 python3-pip libselinux-python3

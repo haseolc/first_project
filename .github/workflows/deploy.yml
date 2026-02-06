@@ -62,10 +62,10 @@ jobs:
           chmod 400 /home/runner/.ssh/id_rsa
           
           # 서버 부팅 대기 (잠시 기다려야 SSH가 뜹니다)
-          sleep 20
+          sleep 40
           
            TARGET_IP=${{ needs.terraform.outputs.EC2_PUBLIC_IP }}
-          ssh-keyscan -H $TARGET_IP >> ~/.ssh/known_hosts
+          ssh-keyscan -H $TARGET_IP >> ~/.ssh/known_hosts || true
 
       # 2. Inventory 파일 생성 (절대 경로 사용)
       - name: Create Ansible inventory file
