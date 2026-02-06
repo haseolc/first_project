@@ -1,5 +1,20 @@
 ## 작성 방법
++) 구조
+```bash
+admin-test/
+├─ api/
+│   ├─ app.py
+│   ├─ Dockerfile
+│   └─ templates/
+│       ├─ index.html      # 로그인 화면
+│       └─ dashboard.html  # 로그인 후 화면
+├─ db/
+│   └─ init.sql            # 관리자 계정
+└─ docker-compose.yml
+```
 docker-compose 설치 전제 하에 진행됩니다.
+
+(touch한 파일들은 ```vi``` 편집기 이용해서 여기 GitHub에 있는 파일 복붙하시면 됩니다.)
 ```bash
 mkdir admin-test && cd admin-test
 
