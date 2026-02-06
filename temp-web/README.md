@@ -1,3 +1,31 @@
+## 작성 방법
+docker-compose 설치 전제 하에 진행됩니다.
+```bash
+mkdir admin-test && cd admin-test
+
+touch docker-compose.yml
+
+mkdir api db
+
+cd api
+touch app.py Dockerfile
+
+mkdir templates
+cd templates
+touch index.html dashboard.html
+
+cd ~/admin-test/db
+touch init.sql
+
+sudo docker compose up -d --build
+```
++) 컨테이너 목록: ```sudo docker ps -a```
+```bash
+CONTAINER ID   IMAGE            COMMAND                  CREATED          STATUS          PORTS                                         NAMES
+814c14d28a71   admin-test-api   "python app.py"          27 minutes ago   Up 27 minutes   0.0.0.0:5000->5000/tcp, [::]:5000->5000/tcp   admin-test-api-1
+c29b651e6c0e   mysql:8.0        "docker-entrypoint.s…"   27 minutes ago   Up 27 minutes   3306/tcp, 33060/tcp                           admin-test-db-1
+```
+
 ## 0. 접속
 http://localhost:5000
 
