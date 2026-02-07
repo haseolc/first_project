@@ -1,130 +1,112 @@
 # =========================================================================
-# [SECTION 1] SQL 계층: 정보를 저장하고 관리하는 데이터베이스 서버 정의
+# [SECTION 1] SQL 계층
 # =========================================================================
-apiVersion: apps/v1          
-kind: Deployment             # DB 서버의 수명 주기를 관리
-metadata:                    
-  name: sql-server           # DB 리소스 이름
-# -------------------------------------------------------------------------
-spec:                        
-  replicas: 1                
-  selector:                  
-    matchLabels:             
-      app: sql               # "app: sql" 레이블을 추적
-# -------------------------------------------------------------------------
-  template:                  
-    metadata:                
-      labels:                
-        app: sql             
-    spec:                    
-      containers:            
-      - name: sql-cntr       
-        image: mariadb:latest # 공식 MariaDB 이미지 사용
-        env:                 # 컨테이너 내에서 사용할 환경 변수 (Environment Variables)
-        - name: MARIADB_ROOT_PASSWORD # MariaDB의 관리자 암호 설정 변수명
-          value: "7team_password" # 설정할 실제 암호 값
-        ports:               
-        - containerPort: 3306 # 데이터베이스 표준 접속 포트
-# -------------------------------------------------------------------------
----                          # 구분선
-# -------------------------------------------------------------------------
-apiVersion: v1               
-kind: Service                # DB 전용 네트워크 입구
-metadata:                    
-  name: sql-service          # 서비스 이름 (API 서버가 이 주소로 DB 요청을 보냄)
-# -------------------------------------------------------------------------
-spec:                        
-  selector:                  
-    app: sql                 # SQL 파드와 연결
-  ports:                     
-    - port: 3306             # 서비스 포트
-      targetPort: 3306       # 타겟 DB 포트
-
-
-
-
+apiVersion: apps/v1     	        # Deployment 객체를 만들기 위한 API 버전 정의
+kind: Deployment         	        # 애플리케이션의 배포 상태와 복제본을 관리하는 리소스 종류
+metadata:                 	      # 이 리소스를 고유하게 식별하기 위한 정보
+  name: sql-server       	        # 이 배포판의 이름을 "sql-server"로 명명
+spec:                       	    # 상세 설계도 시작
+  replicas: 1                	    # DB 서버의 개수를 1개로 유지 (DB는 보통 1개로 시작)
+  selector:                   	  # 관리할 파드를 찾기 위한 이름표(Label) 조건
+    matchLabels:            	    # 아래의 레이블을 가진 파드를 이 Deployment가 관리함
+      app: sql             	      # "app: sql"이라는 레이블을 추적
+  template:               	      # 새로운 파드를 생성할 때 사용할 설계도(붕어빵 틀)
+    metadata:             	      # 생성될 파드에 부여할 정보
+      labels:               	    # 파드에 붙일 이름표 설정
+        app: sql           	      # 이 파드의 이름표는 "app: sql"임
+    spec:                  	      # 파드 내부의 실제 컨테이너 설정
+      containers:           	    # 실행할 컨테이너 리스트
+      - name: sql-cntr       	    # 컨테이너의 개별 이름 설정
+        image: <YOUR_DOCKER_HUB_ID>/<DB_IMAGE_NAME>:<TAG>   # 팀에서 만든 DB 이미지 경로 입력
+        env:             	              # 컨테이너 안에서 사용할 환경 변수 설정
+        - name: MARIADB_ROOT_PASSWORD   # MariaDB 관리자 암호 변수명 (이미지마다 다를 수 있음)
+          value: "7team_password"   	  # 실제 사용할 암호 (회의 후 결정 필요)
+        ports:            	            # 컨테이너가 열어둘 포트
+        - containerPort: 3306  	        # MariaDB의 표준 포트인 3306번을 사용
+---
+apiVersion: v1               	      # Service 객체를 위한 기본 API 버전
+kind: Service              	        # 파드에 고정 주소를 부여하는 네트워크 리소스 종류
+metadata:                   	      # 서비스의 식별 정보
+  name: sql-service         	      # API 서버가 이 이름으로 DB에 접속함
+spec:                       	      # 서비스의 동작 방식 정의
+  selector:                  	      # 이 서비스가 어느 파드에 트래픽을 보낼지 결정
+    app: sql                 	      # "app: sql" 레이블을 가진 DB 파드에 연결
+  ports:                    	      # 포트 연결 설정
+    - port: 3306             	      # 서비스 자체가 외부(API서버)로부터 받는 포트
+      targetPort: 3306       	      # 서비스가 받은 트래픽을 실제 DB 파드에 전달하는 포트
 
 # =========================================================================
-# [SECTION 2] API 계층: 데이터 처리 및 로직을 수행하는 백엔드 서버 정의
+# [SECTION 2] API 계층
 # =========================================================================
-apiVersion: apps/v1          # Deployment를 위해 apps/v1 API 사용
-kind: Deployment             # API 서버의 배포와 복구 기능을 담당
-metadata:                    # API 서버 리소스의 메타데이터
-  name: api-server           # 리소스 이름 설정
-# -------------------------------------------------------------------------
-spec:                        # 상세 상태 정의
-  replicas: 1                # 1대의 API 서버 유지
-  selector:                  # 관리할 파드 선택 조건
-    matchLabels:             
-      app: api               # "app: api" 레이블을 추적
-# -------------------------------------------------------------------------
-  template:                  # 생성될 API 파드의 명세
-    metadata:                
-      labels:                
-        app: api             # 파드에 레이블 부여
-    spec:                    
-      containers:            
-      - name: api-cntr       
-        image: python:3.9-slim # 경량 파이썬 실행 환경 이미지
-        command: ["python", "-m", "http.server", "8080"] # 컨테이너 시작 시 실행할 명령
-        ports:               
-        - containerPort: 8080 # API 서비스 포트
-# -------------------------------------------------------------------------
----                          # 구분선
-# -------------------------------------------------------------------------
-apiVersion: v1               
-kind: Service                # 네트워크 통로 생성
-metadata:                    
-  name: api-service          # 서비스 이름 (웹 서버가 이 주소를 바라봄)
-# -------------------------------------------------------------------------
-spec:                        
-  selector:                  
-    app: api                 # API 파드와 연결
-  ports:                     
-    - port: 8080             # 서비스 포트
-      targetPort: 8080       # 타겟 파드 포트
-# -------------------------------------------------------------------------
-
-
-
-
+apiVersion: apps/v1            # Deployment API 버전
+kind: Deployment               # 리소스 종류: Deployment
+metadata:                      # 메타데이터
+  name: api-server             # 이 배포판의 이름을 "api-server"로 설정
+spec:                          # 상세 설계
+  replicas: 1                  # API 서버의 복제본 개수를 1개로 설정
+  selector:                    # 관리 대상 파드 식별 조건
+    matchLabels:               # 레이블 일치 확인
+      app: api                 # "app: api" 레이블을 가진 파드 관리
+  template:                    # 파드 생성 설계도
+    metadata:                  # 파드 메타데이터
+      labels:                  # 파드 이름표 부여
+        app: api               # 이름표를 "app: api"로 설정
+    spec:                      # 컨테이너 명세
+      containers:              # 컨테이너 설정
+      - name: api-cntr         # 컨테이너 이름
+        image: <YOUR_DOCKER_HUB_ID>/<API_IMAGE_NAME>:<TAG> # [비움] 팀에서 만든 API 서버 이미지 경로 입력
+        env:                          # API 서버가 DB에 접속하기 위한 환경변수 설정 (중요!)
+        - name: DB_HOST               # DB 접속 주소 변수명
+          value: "sql-service"        # 위에서 만든 서비스 이름(sql-service)을 주소로 사용
+        - name: DB_PASSWORD           # DB 접속 암호 변수명
+          value: "7team_password"     # DB Deployment에 설정한 암호와 동일해야 함
+        ports:                        # 컨테이너 포트 설정
+        - containerPort: 8080         # API 서버가 사용하는 포트 (예: 8080)
+---
+apiVersion: v1                 # Service API 버전
+kind: Service                  # 리소스 종류: Service
+metadata:                      # 메타데이터
+  name: api-service            # 웹 서버가 이 이름으로 API를 호출함
+spec:                          # 서비스 설계
+  selector:                    # 대상 파드 선택
+    app: api                   # "app: api" 레이블을 가진 파드에 연결
+  ports:                       # 포트 구성
+    - port: 8080               # 서비스가 외부(웹서버)로부터 받는 포트
+      targetPort: 8080         # 파드 내부로 전달할 포트
 
 # =========================================================================
-# [SECTION 3] WEB 계층: 사용자가 직접 브라우저로 접속하는 프론트엔드 서버 정의
+# [SECTION 3] WEB 계층
 # =========================================================================
-apiVersion: apps/v1          # 이 오브젝트를 생성하기 위한 쿠버네티스 API의 버전을 정의
-kind: Deployment             # 리소스의 종류: 애플리케이션의 배포 방식과 복제본(Pod) 상태를 관리
-metadata:                    # 이 리소스를 고유하게 식별하기 위한 데이터(이름, 레이블 등)를 담는 공간
-  name: web-server           # 이 Deployment의 고유 이름 (kubectl 명령 시 사용)
-# -------------------------------------------------------------------------
-spec:                        # 이 리소스가 도달해야 할 '상태'를 상세하게 정의하는 명세서
-  replicas: 1                # 유지해야 할 파드(Pod, 컨테이너 묶음)의 개수를 설정
-  selector:                  # Deployment가 어떤 파드들을 자기 관리 하에 둘지 결정하는 조건
-    matchLabels:             # 아래 정의된 레이블(Label)과 일치하는 파드를 찾아 관리
-      app: web               # "app: web"이라는 이름표를 가진 파드를 관리 대상으로 삼음
-# -------------------------------------------------------------------------
-  template:                  # 새로운 파드를 생성할 때 사용할 설계도
-    metadata:                # 생성될 파드들에게 부여할 메타데이터
-      labels:                # 파드에 붙일 이름표(Label)
-        app: web             # 이 이름표가 위의 selector와 일치해야 정상적으로 관리
-    spec:                    # 파드 내부의 실제 컨테이너 구성을 정의
-      containers:            # 실행할 컨테이너들의 리스트
-      - name: web-cntr       # 컨테이너의 개별 이름
-        image: nginx:latest  # Docker Hub 등에서 가져올 컨테이너 이미지 주소
-        ports:               # 컨테이너가 외부와 통신하기 위해 열어둘 포트 설정
-        - containerPort: 80  # Nginx의 기본 웹 서비스 포트인 80번을 개방
-# -------------------------------------------------------------------------
----                          # 리소스 간의 경계를 구분하는 구분선 (파일 하나에 여러 리소스 정의 가능)
-# -------------------------------------------------------------------------
-apiVersion: v1               # Service 객체는 핵심 API 그룹인 v1을 사용
-kind: Service                # 리소스의 종류: 파드들에게 고정된 주소를 제공하는 네트워크 서비스
-metadata:                    # 서비스의 식별 정보
-  name: web-service          # 서비스의 이름 (다른 파드들이 이 이름으로 접속할 수 있음)
-# -------------------------------------------------------------------------
-spec:                        # 서비스의 네트워크 동작 방식을 정의
-  selector:                  # 이 서비스가 트래픽을 전달할 대상 파드를 지정
-    app: web                 # "app: web" 이름표를 가진 파드들에게 트래픽을 분산
-  ports:                     # 포트 매핑 설정
-    - port: 80               # 사용자가 서비스 주소로 들어올 때 사용하는 포트
-      targetPort: 80         # 서비스가 전달받은 트래픽을 보낼 파드 내부의 포트
+apiVersion: apps/v1            # Deployment API 버전
+kind: Deployment               # 리소스 종류: Deployment
+metadata:                      # 메타데이터
+  name: web-server             # 배포판 이름을 "web-server"로 설정
+spec:                          # 상세 설계
+  replicas: 1                  # 웹 서버 복제본 개수 설정
+  selector:                    # 관리 대상 파드 조건
+    matchLabels:               # 레이블 매칭
+      app: web                 # "app: web" 레이블을 관리
+  template:                    # 파드 설계도
+    metadata:                  # 파드 메타데이터
+      labels:                  # 파드 이름표
+        app: web               # 이름표를 "app: web"으로 설정
+    spec:                      # 컨테이너 명세
+      containers:              # 컨테이너 설정
+      - name: web-cntr         # 컨테이너 이름
+        image: <YOUR_DOCKER_HUB_ID>/<WEB_IMAGE_NAME>:<TAG> # [비움] 팀에서 만든 프론트 이미지 경로 입력
+        ports:                 # 컨테이너 포트
+        - containerPort: 80    # 웹 서버(Nginx 등)의 기본 포트 80번 사용
+---
+apiVersion: v1                 # Service API 버전
+kind: Service                  # 리소스 종류: Service
+metadata:                      # 메타데이터
+  name: web-service            # 외부 사용자가 접속할 서비스 이름
+spec:                          # 서비스 설계
+  type: NodePort               # [중요] 외부 사용자가 브라우저로 접속할 수 있게 NodePort 타입 사용
+  selector:                    # 대상 파드 선택
+    app: web                   # "app: web" 레이블을 가진 파드에 연결
+  ports:                       # 포트 구성
+    - port: 80                 # 서비스가 외부에서 받을 포트
+      targetPort: 80           # 파드 내부로 전달할 포트
+      nodePort: 30080          # 브라우저에서 <IP>:30080으로 접속 가능하도록 설정
 # -------------------------------------------------------------------------
