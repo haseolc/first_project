@@ -1,13 +1,13 @@
 CREATE DATABASE IF NOT EXISTS admin_db;
-
 USE admin_db;
 
-CREATE TABLE IF NOT EXISTS admins (
-    admin_id VARCHAR(20) PRIMARY KEY,
-    admin_pw VARCHAR(60) NOT NULL
+DROP TABLE IF EXISTS admins;
+CREATE TABLE admins (
+    admin_id VARCHAR(50) PRIMARY KEY,
+    password_hash VARCHAR(255) NOT NULL
 );
 
-INSERT INTO admins (admin_id, admin_pw) VALUES
+INSERT INTO admins (admin_id, password_hash) VALUES
 ('admin', SHA2('123456', 256)),
 ('master', SHA2('234561', 256)),
 ('leader', SHA2('345612', 256)),
