@@ -54,6 +54,8 @@
     line: 'export KUBECONFIG=$HOME/.kube/config'
     create: true
     state: present
+  become: true
+  become_user: ec2-user
   changed_when: false
 
 

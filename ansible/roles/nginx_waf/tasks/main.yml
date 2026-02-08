@@ -4,6 +4,7 @@
   kubernetes.core.helm:
     name: nginx-waf
     chart_ref: ingress-nginx/ingress-nginx
+    repo_url: https://kubernetes.github.io/ingress-nginx
     release_namespace: ingress-nginx
     create_namespace: true
     kubeconfig: /etc/rancher/k3s/k3s.yaml
