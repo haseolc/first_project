@@ -1,15 +1,19 @@
 ---
 # 1. 앤서블의 파이썬 엔진을 거치지 않고 직접 패키지 설치 (Raw)
-- name: "시스템 기본 패키지 설치 (Raw)"
-  ansible.builtin.raw: sudo yum install -y python3 python3-pip git libselinux-python3
+- name: "시스템 기본 패키지 설치 (Raw - AL2023 호환)"
+  ansible.builtin.raw: sudo dnf install -y python3 python3-pip git python3-libselinux
   changed_when: false
 
-# 2. 파이썬 3.7 환경에서도 잘 돌아가는 특정 버전의 라이브러리 설치 (Raw)
-# 최신 kubernetes 라이브러리는 3.7을 지원 안 하므로 버전을 낮춰서 설치합니다.
-- name: "앤서블 라이브러리 강제 설치 (Raw CLI)"
-  ansible.builtin.raw: |
-    sudo pip3 install --upgrade pip && \
-    sudo pip3 install 'kubernetes<25.0.0' 'PyYAML<6.0.0'
+# 2. pip 업그레이드 및 앤서블 필요 라이브러리 설치 (AL2023 호환)
+- name: "pip 업그레이드 및 앤서블 필요 라이브러리 설치"
+  become: true
+  ansible.builtin.pip:
+    name:
+      - pip
+      - kubernetes
+      - PyYAML
+    state: present
+    executable: pip3
   changed_when: false
 
 # 3. 이후 작업에서 파이썬 경로 때문에 에러 나는 것 방지
