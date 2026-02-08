@@ -1,16 +1,43 @@
 ---
-- name: "기존 Helm 파일 제거 (Raw)"
-  ansible.builtin.raw: sudo rm -f /usr/local/bin/helm /usr/bin/helm
-  changed_when: false
+- name: "기존 Helm 바이너리 제거"
+  become: true
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /usr/local/bin/helm
+    - /usr/bin/helm
 
-- name: "Helm 설치 (Raw)"
-  ansible.builtin.raw: |
-    cd /tmp
-    curl -L https://get.helm.sh/helm-v3.17.0-linux-amd64.tar.gz -o helm.tar.gz
-    tar -zxvf helm.tar.gz
-    sudo mv linux-amd64/helm /usr/local/bin/helm
-    sudo chmod +x /usr/local/bin/helm
-    sudo ln -sf /usr/local/bin/helm /usr/bin/helm
-  changed_when: true
+- name: "Helm 바이너리 다운로드"
+  ansible.builtin.get_url:
+    url: https://get.helm.sh/helm-v3.17.0-linux-amd64.tar.gz
+    dest: /tmp/helm.tar.gz
+    mode: '0644'
+  register: helm_download
+
+- name: "Helm 바이너리 압축 해제"
+  ansible.builtin.unarchive:
+    src: /tmp/helm.tar.gz
+    dest: /tmp
+    remote_src: true
+  when: helm_download.changed
+
+- name: "Helm 바이너리 이동 및 권한 설정"
+  become: true
+  ansible.builtin.copy:
+    src: /tmp/linux-amd64/helm
+    dest: /usr/local/bin/helm
+    mode: '0755'
+    remote_src: true
+  when: helm_download.changed
+
+- name: "Helm 심볼릭 링크 생성"
+  become: true
+  ansible.builtin.file:
+    src: /usr/local/bin/helm
+    dest: /usr/bin/helm
+    state: link
+    force: true
+  when: helm_download.changed
 
   

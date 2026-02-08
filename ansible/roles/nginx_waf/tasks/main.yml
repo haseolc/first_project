@@ -1,29 +1,35 @@
 ---
 # 1. Nginx Ingress 컨트롤러 설치 (WAF 옵션 포함)
-- name: "Nginx Ingress WAF 설치 (Helm CLI 직접 실행 - Raw)"
-  ansible.builtin.raw: |
-    /usr/local/bin/helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-    /usr/local/bin/helm repo update
-    /usr/local/bin/helm upgrade --install nginx-waf ingress-nginx/ingress-nginx \
-      --namespace ingress-nginx --create-namespace \
-      --kubeconfig /etc/rancher/k3s/k3s.yaml \
-      --set controller.config.enable-modsecurity=true \
-      --set controller.config.enable-owasp-modsecurity-crs=true \
-      --set controller.hostNetwork=true \
-      --set controller.dnsPolicy=ClusterFirstWithHostNet \
-      --set controller.kind=DaemonSet \
-      --set controller.service.type=ClusterIP \
-      --set controller.admissionWebhooks.enabled=false
+- name: "Nginx Ingress WAF 설치 (Helm 모듈 사용)"
+  community.kubernetes.helm:
+    name: nginx-waf
+    chart_ref: ingress-nginx/ingress-nginx
+    release_namespace: ingress-nginx
+    create_namespace: true
+    kubeconfig: /etc/rancher/k3s/k3s.yaml
+    values:
+      controller:
+        config:
+          enable-modsecurity: "true"
+          enable-owasp-modsecurity-crs: "true"
+        hostNetwork: true
+        dnsPolicy: ClusterFirstWithHostNet
+        kind: DaemonSet
+        service:
+          type: ClusterIP
+        admissionWebhooks:
+          enabled: false
+    state: present
   changed_when: false
 
 # 2. 컨트롤러가 완전히 뜰 때까지 잠시 대기
 - name: "Nginx 컨트롤러 부팅 대기"
-  ansible.builtin.raw: sleep 30
+  ansible.builtin.shell: sleep 30
   changed_when: false
 
 # 3. HTTPS 테스트용 자체 서명 인증서 생성 및 K3s 등록
-- name: "자체 서명 인증서 생성 및 Secret 등록 (Raw)"
-  ansible.builtin.raw: |
+- name: "자체 서명 인증서 생성 및 Secret 등록"
+  ansible.builtin.shell: |
     if [ ! -f /tmp/tls.key ]; then
       openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
         -keyout /tmp/tls.key -out /tmp/tls.crt \
@@ -36,8 +42,8 @@
 
 # 4. ★ 생략 가능: 모든 트래픽을 WAF로 강제 통과시키는 Catch-all 규칙 생성
 # 본 규칙은 http/https 테스트를 위해 작업 한 코드 문제 생
-- name: "WAF 차단 규칙(Ingress) 배포 (Raw)"
-  ansible.builtin.raw: |
+- name: "WAF 차단 규칙(Ingress) 배포"
+  ansible.builtin.shell: |
     cat <<EOF | /usr/local/bin/kubectl apply -f -
     apiVersion: networking.k8s.io/v1
     kind: Ingress
