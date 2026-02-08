@@ -7,7 +7,7 @@
 helm version
 
 # 2. 추가한 레포지토리 목록 확인 (ingress-nginx가 있어야 함)
-helm repo list
+sudo helm repo list
 ```
 
 ---

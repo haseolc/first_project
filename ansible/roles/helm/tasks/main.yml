@@ -42,10 +42,14 @@
 
 - name: "Nginx Ingress Helm 저장소 추가"
   ansible.builtin.command: helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+  become: true
+  become_user: ec2-user
   changed_when: true
 
 - name: "Helm 리포지토리 업데이트"
   ansible.builtin.command: helm repo update
+  become: true
+  become_user: ec2-user
   changed_when: true
 
   

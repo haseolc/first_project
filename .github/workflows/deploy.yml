@@ -87,6 +87,11 @@ jobs:
           # Install collections directly into the ansible directory
           ansible-galaxy collection install community.kubernetes -p ./ansible/collections
 
+      - name: Add Nginx Ingress Helm repository
+        run: |
+          helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+          helm repo update
+
       # 3. 앤서블 실행
       - name: Ansible Running Start
 
