@@ -58,6 +58,27 @@
   become_user: ec2-user
   changed_when: false
 
+#infra.yml 파일 서버 연동?
+- name: "infra.yml 파일을 서버로 복사"
+  ansible.builtin.copy:
+    src: ../infra.yml
+    dest: /home/ec2-user/infra.yml
+    owner: ec2-user
+    group: ec2-user
+    mode: '0644'
+
+- name: "k3s 리소스 배포 (kubectl apply -f infra.yml)"
+  become: true
+  become_user: ec2-user
+  ansible.builtin.shell: |
+    /usr/local/bin/kubectl apply -f /home/ec2-user/infra.yml
+  environment:
+    KUBECONFIG: /home/ec2-user/.kube/config
+  register: deploy_out
+
+- name: "배포 결과 출력"
+  ansible.builtin.debug:
+    var: deploy_out.stdout_lines
 
 # K3s 설치 실행
 # INSTALL_K3S_SKIP_SELINUX_RPM=true: SELinux 정책 버전 충돌 문제를 우회합니다.
