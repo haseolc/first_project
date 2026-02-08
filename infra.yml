@@ -1,78 +1,5 @@
 # =========================================================================
-# [SECTION 1] SQL 계층
-# =========================================================================
-
-#deployment영역
-apiVersion: apps/v1     	        # Deployment 객체를 만들기 위한 API 버전 정의
-kind: Deployment         	        # 애플리케이션의 배포 상태와 복제본을 관리하는 리소스 종류
-metadata:                 	      # 이 리소스를 고유하게 식별하기 위한 정보
-  name: mysql           	        # 이 배포판의 이름을 "sql-server"로 명명
-spec:                       	    # 상세 설계도 시작
-  replicas: 1                	    # DB 서버의 개수를 1개로 유지 (DB는 보통 1개로 시작)
-  selector:                   	  # 관리할 파드를 찾기 위한 이름표(Label) 조건
-    matchLabels:            	    # 아래의 레이블을 가진 파드를 이 Deployment가 관리함
-      app: mysql           	      # "app: sql"이라는 레이블을 추적
-  template:               	      # 새로운 파드를 생성할 때 사용할 설계도
-    metadata:             	      # 생성될 파드에 부여할 정보
-      labels:               	    # 파드에 붙일 이름표 설정
-        app: mysql         	      # 이 파드의 이름표는 "app: sql"임
-    spec:                  	      # 파드 내부의 실제 컨테이너 설정
-      containers:           	    # 실행할 컨테이너 리스트
-      - name: mysql         	    # 컨테이너의 개별 이름 설정
-        image: mysql:8.0          # 팀에서 만든 DB 이미지 경로 입력
-        env:             	              # 컨테이너 안에서 사용할 환경 변수 설정
-        - name: MASQL_ROOT_PASSWORD     # MariaDB 관리자 암호 변수명 (이미지마다 다를 수 있음)
-          value: "root_pw"   	          # 실제 사용할 암호 (회의 후 결정 필요)
-        - name: MYSQL_DATABASE          # DATABASE 변수명
-          value: "admin_db"             # 초기 생성 DB 이름
-        ports:            	            # 컨테이너가 열어둘 포트
-            - containerPort: 3306  	    # MariaDB의 표준 포트인 3306번을 사용
-        volumeMounts: 
-          - name: mysql-init
-          #  mountPath: /docker-entrypoint-initdb.d
-            mountPath: /docker-entrypoint-initdb.d/init.sql
-            subPath: init.sql
-      volumes:
-        - name: mysql-init
-          configMap:
-            name: mysql-init-sql
-            items:
-              - key: init.sql
-                path: init.sql
-          #hostPath: # EC2 서버(노드) 기준 파일 경로
-          #  path: /home/ec2-user/my-project/myapp/db/init.sql # 호스트의 init.sql 파일을 컨테이너로 연결
-          #  type: File
-
-#service영역
----
-apiVersion: v1               	      # Service 객체를 위한 기본 API 버전
-kind: Service              	        # 파드에 고정 주소를 부여하는 네트워크 리소스 종류
-metadata:                   	      # 서비스의 식별 정보
-  name: mysql         	            # API 서버가 이 이름으로 DB에 접속함
-spec:                       	      # 서비스의 동작 방식 정의
-  type: NodePart # ClusterIP        # 클러스터 내부에서만 접근 가능 (외부 접속 불가)
-  selector:                  	      # 이 서비스가 어느 파드에 트래픽을 보낼지 결정
-    app: mysql               	      # "app: sql" 레이블을 가진 DB 파드에 연결
-  ports:                    	      # 포트 연결 설정
-    - port: 3306             	      # 서비스 자체가 외부(API서버)로부터 받는 포트
-      targetPort: 3306       	      # 서비스가 받은 트래픽을 실제 DB 파드에 전달하는 포트
-# 여기서는 MySQL 컨테이너가 3306 포트를 사용하므로 동일하게 설정 -> 클러스터 내부 다른 파드(API)에서 mysql:3306으로 접속 가능
-
-#configmap영역
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: mysql-init-sql
-data:
-  init.sql: |
-    CREATE TABLE IF NOT EXISTS admins (
-      admin_id VARCHAR(20) PRIMARY KEY,
-      admin_pw VARCHAR(50)
-    );
-
-# =========================================================================
-# [SECTION 2] API 계층
+# [SECTION 1] API 계층
 # =========================================================================
 
 #deployment영역
@@ -122,7 +49,7 @@ spec:                          # 서비스 설계
       nodePort: 30001          # 클러스터 노드에서 열릴 외부 포트 (외부에서 접속할 때 사용) -> 브라우저 접속 예시: http://<EC2_PUBLIC_IP>:30001
 
 # =========================================================================
-# [SECTION 3] WEB 계층
+# [SECTION 2] WEB 계층
 # =========================================================================
 apiVersion: apps/v1            # Deployment API 버전
 kind: Deployment               # 리소스 종류: Deployment
