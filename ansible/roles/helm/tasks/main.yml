@@ -40,6 +40,10 @@
     force: true
   when: helm_download.changed
 
+- name: "Nginx Ingress Helm 저장소 추가 (Root)"
+  ansible.builtin.command: helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+  changed_when: true
+
 
 
   
