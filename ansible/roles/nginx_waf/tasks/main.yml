@@ -1,7 +1,7 @@
 ---
 # 1. Nginx Ingress 컨트롤러 설치 (WAF 옵션 포함)
 - name: "Nginx Ingress WAF 설치 (Helm 모듈 사용)"
-  community.kubernetes.helm:
+  kubernetes.core.helm:
     name: nginx-waf
     chart_ref: ingress-nginx/ingress-nginx
     release_namespace: ingress-nginx
