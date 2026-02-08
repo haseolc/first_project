@@ -21,6 +21,12 @@
     delay: 5
     timeout: 300
 
+- name: K3s 서비스 활성화 및 시작 (설치 시 시작되지 않은 경우)
+  become: true
+  ansible.builtin.raw: |
+    sudo systemctl enable --now k3s
+  changed_when: false
+
 - name: "kubectl 심볼릭 링크 생성"
   become: true
   ansible.builtin.file:
