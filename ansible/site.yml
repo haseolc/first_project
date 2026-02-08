@@ -2,7 +2,7 @@
 - name: "7팀 클라우드 자동화 및 보안 구축"
   hosts: k3s_cluster  #  deploy.yml 에 정의된 것과 통일
   become: true       # sudo 권한 사용
-  gather_facts: false  # 시스템 전체 정보 수집 비활성화
+  gather_facts: true  # 시스템 전체 정보 수집 활성화
   become_method: sudo  
   become_user: root    
   roles:
@@ -10,3 +10,6 @@
     - k3s
     - helm
     - nginx_waf
+    # mysql roles/mysql/tasks/main.yml 에서 myapi db 생성 및 사용자 생성 수행
+    # myapi roles/myapi/tasks/main.yml 에서 myapi 배포 수행
+
