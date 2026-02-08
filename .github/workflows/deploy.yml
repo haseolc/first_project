@@ -1,9 +1,12 @@
 name: 7th-room-project-deploy
 
 on:
-  #push:
-  # branches: [main]
-  workflow_dispatch:
+  # push:
+  #   branches: 
+  #     - main
+  #     - sh
+  #     - Jeong
+  workflow_dispatch: # 수동 실행 버튼 유지
 
 jobs:
   #도커 빌드 및 푸시
