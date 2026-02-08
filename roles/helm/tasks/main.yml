@@ -1,0 +1,13 @@
+---
+- name: Install Helm (ensure /usr/local/bin/helm)
+  raw: |
+    curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+    sudo ln -sf /usr/local/bin/helm /usr/bin/helm || true
+  args:
+    creates: /usr/local/bin/helm
+  changed_when: false
+
+- name: Show helm version
+  raw: |
+    /usr/local/bin/helm version
+  changed_when: false

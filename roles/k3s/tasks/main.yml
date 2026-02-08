@@ -1,0 +1,90 @@
+---
+# 기본값: reset 안 함 (필요할 때만 -e k3s_reset=true)
+- name: Cleanup previous k3s (ONLY when k3s_reset=true)
+  raw: |
+    sudo /usr/local/bin/k3s-uninstall.sh || true
+    sudo rm -rf /etc/rancher /var/lib/rancher
+    sudo rm -f /usr/local/bin/k3s /usr/local/bin/k3s-killall.sh
+  changed_when: false
+  when: k3s_reset | default(false) | bool
+
+- name: Install k3s server (disable traefik) - skip selinux rpm
+  raw: |
+    curl -sfL https://get.k3s.io | \
+      INSTALL_K3S_EXEC="server --disable traefik" \
+      INSTALL_K3S_SKIP_SELINUX_RPM=true \
+      sh -
+  args:
+    creates: /usr/local/bin/k3s
+
+- name: Enable and start k3s service (in case install didn't start it)
+  raw: |
+    sudo systemctl enable --now k3s
+  changed_when: false
+
+- name: Wait for kubeconfig
+  raw: |
+    until [ -f /etc/rancher/k3s/k3s.yaml ]; do sleep 2; done
+  changed_when: false
+
+- name: Set kubeconfig for ec2-user
+  raw: |
+    sudo mkdir -p /home/ec2-user/.kube
+    sudo cp /etc/rancher/k3s/k3s.yaml /home/ec2-user/.kube/config
+    sudo chown -R ec2-user:ec2-user /home/ec2-user/.kube
+    sudo chmod 600 /home/ec2-user/.kube/config
+  changed_when: false
+
+- name: Persist KUBECONFIG in .bashrc (ec2-user)
+  raw: |
+    if ! grep -q "export KUBECONFIG=" /home/ec2-user/.bashrc; then
+      echo 'export KUBECONFIG=$HOME/.kube/config' >> /home/ec2-user/.bashrc
+    fi
+  changed_when: false
+
+- name: Set kubeconfig for root (so kubectl works under sudo)
+  raw: |
+    sudo mkdir -p /root/.kube
+    sudo cp /etc/rancher/k3s/k3s.yaml /root/.kube/config
+    sudo chmod 600 /root/.kube/config
+  changed_when: false
+
+# --------------------------
+# ✅ 검증(Verification) 단계
+# --------------------------
+
+- name: Verify k3s service is active
+  raw: |
+    systemctl is-active k3s
+  register: k3s_active
+  changed_when: false
+  failed_when: k3s_active.stdout.strip() != "active"
+
+- name: Wait for Kubernetes API readyz
+  raw: |
+    /usr/local/bin/k3s kubectl get --raw=/readyz
+  register: readyz
+  retries: 30
+  delay: 2
+  changed_when: false
+  until: readyz.rc == 0
+
+- name: Get nodes
+  raw: |
+    /usr/local/bin/k3s kubectl get nodes -o wide
+  register: nodes_out
+  changed_when: false
+
+- name: Show nodes
+  debug:
+    var: nodes_out.stdout_lines
+
+- name: Get pods (all namespaces)
+  raw: |
+    /usr/local/bin/k3s kubectl get pods -A -o wide
+  register: pods_out
+  changed_when: false
+
+- name: Show pods
+  debug:
+    var: pods_out.stdout_lines

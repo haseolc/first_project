@@ -1,0 +1,97 @@
+---
+- name: Add ingress-nginx helm repo
+  raw: |
+    export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+    /usr/local/bin/helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx || true
+    /usr/local/bin/helm repo update
+  changed_when: false
+
+
+- name: Install/Upgrade ingress-nginx (DaemonSet + hostNetwork) with ModSecurity enabled
+  raw: |
+    export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+    /usr/local/bin/helm upgrade --install nginx-waf ingress-nginx/ingress-nginx \
+      -n ingress-nginx --create-namespace \
+      --set controller.kind=DaemonSet \
+      --set controller.hostNetwork=true \
+      --set controller.service.type=ClusterIP \
+      --set controller.ingressClassResource.default=true \
+      --set controller.config.enable-modsecurity="true" \
+      --set controller.config.enable-owasp-modsecurity-crs="true"
+  changed_when: false
+
+
+- name: Wait for ingress-nginx controller rollout
+  raw: |
+    sudo /usr/local/bin/k3s kubectl -n ingress-nginx rollout status ds/nginx-waf-ingress-nginx-controller --timeout=180s
+  changed_when: false
+
+- name: Patch controller ConfigMap to force ModSecurity snippet (block mode + audit to stdout)
+  raw: |
+    cat <<'EOF' | sudo /usr/local/bin/k3s kubectl -n ingress-nginx apply -f -
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: nginx-waf-ingress-nginx-controller
+      namespace: ingress-nginx
+    data:
+      enable-modsecurity: "true"
+      enable-owasp-modsecurity-crs: "true"
+      modsecurity-snippet: |
+        SecRuleEngine On
+        SecRequestBodyAccess On
+        SecAuditEngine RelevantOnly
+        SecAuditLogParts ABIJDEFHZ
+        SecAuditLog /dev/stdout
+    EOF
+  changed_when: false
+
+- name: Restart controller to apply ConfigMap
+  raw: |
+    sudo /usr/local/bin/k3s kubectl -n ingress-nginx rollout restart ds/nginx-waf-ingress-nginx-controller
+    sudo /usr/local/bin/k3s kubectl -n ingress-nginx rollout status ds/nginx-waf-ingress-nginx-controller --timeout=180s
+  changed_when: false
+
+- name: Deploy demo echo app + ingress (for verification)
+  raw: |
+    sudo /usr/local/bin/k3s kubectl create ns demo || true
+    sudo /usr/local/bin/k3s kubectl -n demo create deployment echo --image=ealen/echo-server --replicas=1 || true
+    sudo /usr/local/bin/k3s kubectl -n demo expose deployment echo --port 80 || true
+    cat <<'EOF' | sudo /usr/local/bin/k3s kubectl apply -f -
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: echo
+      namespace: demo
+      annotations:
+        nginx.ingress.kubernetes.io/enable-modsecurity: "true"
+        nginx.ingress.kubernetes.io/enable-owasp-core-rules: "true"
+    spec:
+      ingressClassName: nginx
+      rules:
+      - http:
+          paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: echo
+                port:
+                  number: 80
+    EOF
+  changed_when: false
+
+- name: Wait for demo pod
+  raw: |
+    sudo /usr/local/bin/k3s kubectl -n demo rollout status deploy/echo --timeout=180s
+  changed_when: false
+
+- name: Smoke test (should return 200 or 403; must not be 000)
+  raw: |
+    curl -s -o /dev/null -w "%{http_code}\n" "http://127.0.0.1/?q=%3Cscript%3Ealert(1)%3C%2Fscript%3E"
+  register: waf_code
+  changed_when: false
+
+- name: Show smoke test HTTP code
+  debug:
+    var: waf_code.stdout

@@ -1,0 +1,46 @@
+# =========================
+# Terraform
+# =========================
+.terraform/
+.terraform/**
+*.tfstate
+*.tfstate.*
+*.tfvars
+terraform.tfvars
+
+# =========================
+# Secrets / Credentials
+# =========================
+*.pem
+*.key
+*.csv
+.env
+.env.*
+secrets.yml
+*secret*
+*credential*
+*accessKey*
+*accessKeys*
+
+# Windows metadata
+*:Zone.Identifier
+
+# =========================
+# Ansible
+# =========================
+*.retry
+inventory.ini
+
+# =========================
+# IDE / OS
+# =========================
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# =========================
+# Local backups
+# =========================
+.gitignore.bak.*
+roles/inventory.ini.bak.*
