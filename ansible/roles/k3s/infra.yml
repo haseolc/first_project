@@ -40,7 +40,7 @@ kind: Service                  # 리소스 종류: Service
 metadata:                      # 메타데이터
   name: myapi                  # 웹 서버가 이 이름으로 API를 호출함
 spec:                          # 서비스 설계
-  type: NodePart               # 클러스터 노드의 포트를 외부로 열어 접근 가능 (ClusterIP: 클러스터 내부 전용 / LoadBalancer: 클라우드 LB 사용 가능)
+  type: NodePort               # 클러스터 노드의 포트를 외부로 열어 접근 가능 (ClusterIP: 클러스터 내부 전용 / LoadBalancer: 클라우드 LB 사용 가능)
   selector:                    # 대상 파드 선택
     app: myapi                 # "app: api" 레이블을 가진 파드에 연결
   ports:                       # 포트 구성
