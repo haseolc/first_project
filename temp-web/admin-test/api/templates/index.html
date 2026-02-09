@@ -1,16 +1,125 @@
 <!DOCTYPE html>
-<html>
+<html class="light" lang="ko">
 <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Admin Login</title>
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700&display=swap" rel="stylesheet"/>
+
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#135bec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .bg-pattern {
+            background-color: #f6f6f8;
+            background-image:
+                radial-gradient(#d1d5db 0.5px, transparent 0.5px),
+                radial-gradient(#d1d5db 0.5px, #f6f6f8 0.5px);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+        }
+    </style>
 </head>
-<body>
-    <h1>Login Page</h1>
-    <form method="POST" action="/login">
-        <label>Admin ID:</label>
-        <input type="text" name="admin_id" required><br>
-        <label>Password:</label>
-        <input type="password" name="password" required><br>
-        <button type="submit">Login</button>
-    </form>
+
+<body class="bg-background-light font-display antialiased">
+
+<div class="min-h-screen flex items-center justify-center bg-pattern px-4 py-12">
+
+    <!-- Login Card -->
+    <div class="w-full max-w-[440px] bg-white shadow-xl rounded-xl overflow-hidden border border-gray-100">
+
+        <!-- Header -->
+        <div class="pt-10 pb-6 px-10 text-center">
+            <div class="inline-flex items-center justify-center p-3 mb-6 bg-primary/10 rounded-xl">
+                <span class="material-symbols-outlined text-primary text-3xl">
+                    admin_panel_settings
+                </span>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">Admin Login</h1>
+            <p class="text-gray-500 text-sm">관리자 계정으로 로그인하세요</p>
+        </div>
+
+        <!-- 🔐 Login Form -->
+        <form method="POST" action="/login" class="px-10 pb-10 space-y-6">
+
+            <!-- Admin ID -->
+            <div class="space-y-2">
+                <label class="text-sm font-medium text-gray-700" for="admin_id">
+                    Admin ID
+                </label>
+                <input
+                    id="admin_id"
+                    name="admin_id"
+                    type="text"
+                    required
+                    placeholder="관리자 ID"
+                    class="w-full h-12 px-4 bg-gray-50 border border-gray-200 rounded-lg
+                           text-gray-900 placeholder:text-gray-400
+                           focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                />
+            </div>
+
+            <!-- Password -->
+            <div class="space-y-2">
+                <label class="text-sm font-medium text-gray-700" for="password">
+                    Password
+                </label>
+                <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    required
+                    placeholder="••••••••"
+                    class="w-full h-12 px-4 bg-gray-50 border border-gray-200 rounded-lg
+                           text-gray-900 placeholder:text-gray-400
+                           focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                />
+            </div>
+
+            <!-- Login Button -->
+            <button
+                type="submit"
+                class="w-full h-12 bg-primary hover:bg-primary/90 text-white font-bold
+                       rounded-lg shadow-md shadow-primary/20 transition-all
+                       flex items-center justify-center gap-2">
+                Login
+                <span class="material-symbols-outlined text-[18px]">
+                    arrow_forward
+                </span>
+            </button>
+
+        </form>
+
+        <!-- Footer -->
+        <div class="bg-gray-50 py-4 text-center text-xs text-gray-400 border-t">
+            © Admin System
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
