@@ -1,0 +1,95 @@
+---
+- name: Deploy Prometheus to EC2
+  hosts: all
+  become: yes
+  vars:
+    prometheus_version: "2.22.0"
+    prometheus_user: "prometheus"
+    prometheus_dir_etc: "/etc/prometheus"
+    prometheus_dir_lib: "/var/lib/prometheus"
+
+  tasks:
+    - name: 1. Prometheus 유저 생성 (로그인 불가 계정)
+      user:
+        name: "{{ prometheus_user }}"
+        shell: /bin/false
+        create_home: no
+        state: present
+
+    - name: 2. 필요한 디렉토리 생성
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ prometheus_user }}"
+        group: "{{ prometheus_user }}"
+        mode: '0755'
+      loop:
+        - "{{ prometheus_dir_etc }}"
+        - "{{ prometheus_dir_lib }}"
+        - "{{ prometheus_dir_etc }}/consoles"
+        - "{{ prometheus_dir_etc }}/console_libraries"
+
+    - name: 3. Prometheus 바이너리 다운로드 및 압축 해제
+      unarchive:
+        src: "https://github.com/prometheus/prometheus/releases/download/v{{ prometheus_version }}/prometheus-{{ prometheus_version }}.linux-amd64.tar.gz"
+        dest: "/tmp"
+        remote_src: yes
+
+    - name: 4. 바이너리 파일을 /usr/local/bin으로 이동
+      copy:
+        src: "/tmp/prometheus-{{ prometheus_version }}.linux-amd64/{{ item }}"
+        dest: "/usr/local/bin/{{ item }}"
+        mode: '0755'
+        owner: "{{ prometheus_user }}"
+        group: "{{ prometheus_user }}"
+        remote_src: yes
+      loop:
+        - prometheus
+        - promtool
+
+    - name: 5. 설정 및 라이브러리 파일 복사
+      shell: |
+        cp -r /tmp/prometheus-{{ prometheus_version }}.linux-amd64/consoles {{ prometheus_dir_etc }}
+        cp -r /tmp/prometheus-{{ prometheus_version }}.linux-amd64/console_libraries {{ prometheus_dir_etc }}
+        cp /tmp/prometheus-{{ prometheus_version }}.linux-amd64/prometheus.yml {{ prometheus_dir_etc }}/prometheus.yml
+      args:
+        creates: "{{ prometheus_dir_etc }}/prometheus.yml"
+
+    - name: 6. 권한 정리 (Owner 설정)
+      file:
+        path: "{{ item }}"
+        owner: "{{ prometheus_user }}"
+        group: "{{ prometheus_user }}"
+        recurse: yes
+      loop:
+        - "{{ prometheus_dir_etc }}"
+        - "{{ prometheus_dir_lib }}"
+
+    - name: 7. Systemd 서비스 파일 등록
+      copy:
+        dest: /etc/systemd/system/prometheus.service
+        content: |
+          [Unit]
+          Description=Prometheus Server
+          Wants=network-online.target
+          After=network-online.target
+
+          [Service]
+          User={{ prometheus_user }}
+          Group={{ prometheus_user }}
+          Type=simple
+          ExecStart=/usr/local/bin/prometheus \
+              --config.file {{ prometheus_dir_etc }}/prometheus.yml \
+              --storage.tsdb.path {{ prometheus_dir_lib }}/ \
+              --web.console.templates={{ prometheus_dir_etc }}/consoles \
+              --web.console.libraries={{ prometheus_dir_etc }}/console_libraries
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: 8. 서비스 데몬 리로드 및 시작
+      systemd:
+        name: prometheus
+        state: started
+        enabled: yes
+        daemon_reload: yes
