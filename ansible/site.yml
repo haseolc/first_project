@@ -11,5 +11,6 @@
     - helm
     - nginx_waf
     - prometheus
+    - grafana
 #    - myapi           # roles/myapi/tasks/main.yml 에서 myapi 배포 수행
 
