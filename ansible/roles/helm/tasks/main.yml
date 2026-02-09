@@ -8,42 +8,34 @@
     - /usr/local/bin/helm
     - /usr/bin/helm
 
-- name: "Helm 바이너리 다운로드"
-  ansible.builtin.get_url:
-    url: https://get.helm.sh/helm-v3.17.0-linux-amd64.tar.gz
-    dest: /tmp/helm.tar.gz
-    mode: '0644'
-  register: helm_download
+- name: Install Helm (download latest stable version via script)
+  raw: |
+    curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+    sudo ln -sf /usr/local/bin/helm /usr/bin/helm || true
+  args:
+    creates: /usr/local/bin/helm
+  changed_when: false
 
-- name: "Helm 바이너리 압축 해제"
-  ansible.builtin.unarchive:
-    src: /tmp/helm.tar.gz
-    dest: /tmp
-    remote_src: true
-  when: helm_download.changed
+- name: Show helm version
+  raw: |
+    /usr/local/bin/helm version
+  register: helm_version_output
+  changed_when: false
 
-- name: "Helm 바이너리 이동 및 권한 설정"
-  become: true
-  ansible.builtin.copy:
-    src: /tmp/linux-amd64/helm
-    dest: /usr/local/bin/helm
-    mode: '0755'
-    remote_src: true
-  when: helm_download.changed
-
-- name: "Helm 심볼릭 링크 생성"
-  become: true
-  ansible.builtin.file:
-    src: /usr/local/bin/helm
-    dest: /usr/bin/helm
-    state: link
-    force: true
-  when: helm_download.changed
+- name: Print helm version output
+  debug:
+    var: helm_version_output.stdout_lines
 
 - name: "Nginx Ingress Helm 저장소 추가 (Root)"
   ansible.builtin.command: helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
   changed_when: true
 
+- name: Show helm repo list
+  raw: |
+    helm repo list
+  register: helm_repo_list_output
+  changed_when: false
 
-
-  
+- name: Print helm repo list output
+  debug:
+    var: helm_repo_list_output.stdout_lines

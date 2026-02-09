@@ -28,6 +28,32 @@
   ansible.builtin.shell: sleep 30
   changed_when: false
 
+- name: Patch controller ConfigMap to force ModSecurity snippet (block mode + audit to stdout)
+  raw: |
+    cat <<'EOF' | sudo /usr/local/bin/k3s kubectl -n ingress-nginx apply -f -
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: nginx-waf-ingress-nginx-controller
+      namespace: ingress-nginx
+    data:
+      enable-modsecurity: "true"
+      enable-owasp-modsecurity-crs: "true"
+      modsecurity-snippet: |
+        SecRuleEngine On
+        SecRequestBodyAccess On
+        SecAuditEngine RelevantOnly
+        SecAuditLogParts ABIJDEFHZ
+        SecAuditLog /dev/stdout
+    EOF
+  changed_when: false
+
+- name: Restart controller to apply ConfigMap
+  raw: |
+    sudo /usr/local/bin/k3s kubectl -n ingress-nginx rollout restart ds/nginx-waf-ingress-nginx-controller
+    sudo /usr/local/bin/k3s kubectl -n ingress-nginx rollout status ds/nginx-waf-ingress-nginx-controller --timeout=180s
+  changed_when: false
+
 # 3. HTTPS 테스트용 자체 서명 인증서 생성 및 K3s 등록
 - name: "자체 서명 인증서 생성 및 Secret 등록"
   ansible.builtin.shell: |
@@ -71,3 +97,88 @@
                   number: 80
     EOF
   changed_when: false
+
+- name: Deploy demo echo app + ingress (for verification)
+  raw: |
+    sudo /usr/local/bin/k3s kubectl create ns demo || true
+    sudo /usr/local/bin/k3s kubectl -n demo create deployment echo --image=ealen/echo-server --replicas=1 || true
+    sudo /usr/local/bin/k3s kubectl -n demo expose deployment echo --port 80 || true
+    cat <<'EOF' | sudo /usr/local/bin/k3s kubectl apply -f -
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: echo
+      namespace: demo
+      annotations:
+        nginx.ingress.kubernetes.io/enable-modsecurity: "true"
+        nginx.ingress.kubernetes.io/enable-owasp-core-rules: "true"
+    spec:
+      ingressClassName: nginx
+      rules:
+      - http:
+          paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: echo
+                port:
+                  number: 80
+    EOF
+  changed_when: false
+
+- name: Wait for demo pod
+  raw: |
+    sudo /usr/local/bin/k3s kubectl -n demo rollout status deploy/echo --timeout=180s
+  changed_when: false
+
+- name: Smoke test (should return 200 or 403; must not be 000)
+  raw: |
+    curl -s -o /dev/null -w "%{http_code}\n" "http://127.0.0.1/?q=%3Cscript%3Ealert(1)%3C%2Fscript%3E"
+  register: waf_code
+  changed_when: false
+
+- name: Show smoke test HTTP code
+  debug:
+    var: waf_code.stdout
+
+- name: Verify Nginx Ingress Controller Pod status
+  raw: |
+    sudo /usr/local/bin/k3s kubectl get pods -n ingress-nginx
+  register: nginx_pods_status
+  changed_when: false
+
+- name: Show Nginx Ingress Controller Pod status
+  debug:
+    var: nginx_pods_status.stdout_lines
+
+- name: Verify Nginx Ingress Controller Service and NodePort
+  raw: |
+    sudo /usr/local/bin/k3s kubectl get svc -n ingress-nginx
+  register: nginx_svc_status
+  changed_when: false
+
+- name: Show Nginx Ingress Controller Service and NodePort
+  debug:
+    var: nginx_svc_status.stdout_lines
+
+- name: Check ModSecurity activation in Ingress Controller logs
+  raw: |
+    sudo /usr/local/bin/k3s kubectl logs -n ingress-nginx -l app.kubernetes.io/name=ingress-nginx | grep -i "ModSecurity" || true
+  register: modsecurity_log_check
+  changed_when: false
+
+- name: Show ModSecurity activation in logs
+  debug:
+    var: modsecurity_log_check.stdout_lines
+
+- name: Check ModSecurity configuration inside Nginx container
+  raw: |
+    POD_NAME=$(sudo /usr/local/bin/k3s kubectl get pods -n ingress-nginx -l app.kubernetes.io/name=ingress-nginx -o jsonpath='{.items[0].metadata.name}')
+    sudo /usr/local/bin/k3s kubectl exec -it -n ingress-nginx "$POD_NAME" -- nginx -T | grep -i "modsecurity" || true
+  register: modsecurity_config_check
+  changed_when: false
+
+- name: Show ModSecurity configuration check
+  debug:
+    var: modsecurity_config_check.stdout_lines
