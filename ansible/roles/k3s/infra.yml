@@ -22,7 +22,7 @@ spec:
         - containerPort: 5000
         env:
         - name: DB_HOST
-          value: db
+          value: db # <---------- RDS 엔드포인트
         - name: DB_USER
           value: root
         - name: DB_PASSWORD
@@ -66,4 +66,5 @@ spec:
           service:
             name: myapi
             port:
+
               number: 80
