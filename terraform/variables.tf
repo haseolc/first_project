@@ -4,17 +4,17 @@ variable "aws_region" {
   default     = "ap-northeast-2"
 }
 
-#variable "ami_name_pattern" { # 오류나서 주석처리 해놓았습니다.
+#variable "ami_name_pattern" { # AMI 오류나서 주석처리 해놓았습니다.
 #  description = "AMI name pattern used to pick the most recent Amazon Linux 2023 x86_64 image."
 #  type        = string
 #  default     = "al2023-ami-*-x86_64"
 #}
 
-variable "ami_owners" {
-  description = "List of AMI owner accounts. Use ['amazon'] to restrict to official Amazon AMIs."
-  type        = list(string)
-  default     = ["amazon"]
-}
+# variable "ami_owners" {
+#  description = "List of AMI owner accounts. Use ['amazon'] to restrict to official Amazon AMIs."
+#  type        = list(string)
+#  default     = ["amazon"]
+#}
 
 variable "instance_type" {
   description = "EC2 instance type."
