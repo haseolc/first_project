@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 def get_db_connection():
     return mysql.connector.connect(
-        host=os.environ.get("DB_HOST", "terraform-20260210190831067100000001.cl0aokksg3rp.ap-northeast-2.rds.amazonaws.com"), # <---------- RDS 엔드포인트 
+        host=os.environ.get("DB_HOST", "terraform-20260210194948525200000001.cl0aokksg3rp.ap-northeast-2.rds.amazonaws.com"), # <---------- RDS 엔드포인트 
         user=os.environ.get("DB_USER", "admin"),
         # password=os.environ.get("DB_PASSWORD", "admin1234!"),
         password = os.environ.get("DB_PASSWORD"), # k3s secret 참조
@@ -39,5 +39,6 @@ def login():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
 
 
