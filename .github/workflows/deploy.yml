@@ -43,7 +43,7 @@ jobs:
       - name: Get EC2 Public IP
         id: get-ip
         run: |
-         cd terraform
+          cd terraform
           # IP를 가져와서 제대로 출력되는지 로그로 확인
           TEMP_IP=$(terraform output -raw room7_public_ip)
           echo "Current IP: $TEMP_IP"
@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
 
     # 조건부 실행: EC2_PUBLIC_IP가 비어있지 않은 경우에만 실행
-    if : needs.terraform.outputs.EC2_PUBLIC_IP != ''
+    if: needs.terraform.outputs.EC2_PUBLIC_IP != ''
     steps:
       - uses: actions/checkout@v4
         
@@ -74,7 +74,7 @@ jobs:
           done
           echo "SSH is available."
           
-           TARGET_IP=${{ needs.terraform.outputs.EC2_PUBLIC_IP }}
+          TARGET_IP=${{ needs.terraform.outputs.EC2_PUBLIC_IP }}
           ssh-keyscan -H $TARGET_IP >> /home/runner/.ssh/known_hosts
 
       # 2. Inventory 파일 생성 (절대 경로 사용)
