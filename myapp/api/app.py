@@ -6,10 +6,10 @@ app = Flask(__name__)
 
 def get_db_connection():
     return mysql.connector.connect(
-        host=os.environ.get("DB_HOST", "db"),
-        user=os.environ.get("DB_USER", "root"),
-        password=os.environ.get("DB_PASSWORD", "root_pw"),
-        database=os.environ.get("DB_NAME", "admin_db")
+        host=os.environ.get("DB_HOST", "terraform-20260210071207430100000001.cl0aokksg3rp.ap-northeast-2.rds.amazonaws.com"),
+        user=os.environ.get("DB_USER", "admin"),
+        password=os.environ.get("DB_PASSWORD", "admin1234!"),
+        database=os.environ.get("DB_NAME", "mydb")
     )
 
 @app.route("/")
@@ -38,3 +38,4 @@ def login():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
