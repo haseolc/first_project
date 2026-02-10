@@ -32,8 +32,8 @@
     daemon_reload: yes
 
 # 4. (선택) 설치 확인을 위한 대기
-- name: Grafana 포트(3000) 오픈 대기
+- name: Grafana 포트(30000) 오픈 대기
   wait_for:
-    port: 3000
+    port: 30000
     delay: 5
     timeout: 30
