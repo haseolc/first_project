@@ -1,0 +1,99 @@
+resource "aws_security_group" "ssh_sg" {
+  name = "ssh_sg_7th_room"
+  vpc_id = data.aws_vpc.default.id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "ssh_sg_7th_room"
+  }
+}
+
+resource "aws_security_group" "web_sg" {
+  name = "web_sg_7th_room"
+  vpc_id = data.aws_vpc.default.id
+
+  ingress {
+    from_port = 6443
+    to_port   = 6443
+    protocol  = "tcp"
+    self      = true
+  }
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow external HTTP for WAF testing"
+  }
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow external HTTPS for WAF testing"
+  }
+
+  ingress {
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
+  }
+
+  ingress {
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
+    security_groups = [aws_security_group.ssh_sg_7th_room.id]
+  }
+
+  ingress {
+    description = "HTTP NodePort"
+    from_port   = 30080
+    to_port     = 30080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "HTTPS NodePort"
+    from_port   = 30443
+    to_port     = 30443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "web_sg_7th_room"
+  }
+}
+
+output "sg_7th_room_id" {
+  value = aws_security_group.ssh_sg_7th_room.id
+}
+
+output "web_sg_7th_room_id" {
+  value = aws_security_group.web_sg_7th_room.id
+}
