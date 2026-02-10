@@ -1,7 +1,14 @@
 ---
-- name: Install MySQL client
+- name: Add MySQL repo
   ansible.builtin.shell: |
-    rpm -q mysql-client || dnf install -y mysql-client
+    dnf install -y https://dev.mysql.com/get/mysql80-community-release-el9-8.noarch.rpm
+  args:
+    creates: /etc/yum.repos.d/mysql-community.repo
+
+- name: Install MySQL client from official repo
+  ansible.builtin.dnf:
+    name: mysql-community-client
+    state: present
 
 # mysql -h terraform-20260210071207430100000001.cl0aokksg3rp.ap-northeast-2.rds.amazonaws.com -u admin -p
 # SHOW TABLES;
