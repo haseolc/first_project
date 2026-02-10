@@ -1,11 +1,6 @@
 ---
-- name: Enable MySQL module
-  ansible.builtin.dnf:
-    name: '@mysql'
-    state: present
-    update_cache: yes
-
-- name: Install MySQL server
+# CLI 필요로 MySQL Server 설치 (Client만 설치 불가)
+- name: Install MySQL server (AL2023)
   ansible.builtin.dnf:
     name: mysql-server
     state: present
