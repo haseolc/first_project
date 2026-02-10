@@ -1,13 +1,11 @@
 ---
-- name: Add MySQL repo
-  ansible.builtin.shell: |
-    dnf install -y https://dev.mysql.com/get/mysql80-community-release-el9-8.noarch.rpm
-  args:
-    creates: /etc/yum.repos.d/mysql-community.repo
-
-- name: Install MySQL client from official repo
+- name: Update DNF cache
   ansible.builtin.dnf:
-    name: mysql-community-client
+    update_cache: yes
+
+- name: Install MariaDB client
+  ansible.builtin.dnf:
+    name: mariadb
     state: present
 
 # mysql -h terraform-20260210071207430100000001.cl0aokksg3rp.ap-northeast-2.rds.amazonaws.com -u admin -p
