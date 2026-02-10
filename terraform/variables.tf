@@ -1,1 +1,59 @@
-ㅁㅁ
+variable "aws_region" {
+  description = "AWS region to deploy resources into."
+  type        = string
+  default     = "ap-northeast-2"
+}
+
+variable "ami_name_pattern" {
+  description = "AMI name pattern used to pick the most recent Amazon Linux 2023 x86_64 image."
+  type        = string
+  default     = "al2023-ami-*-x86_64"
+}
+
+variable "ami_owners" {
+  description = "List of AMI owner accounts. Use ['amazon'] to restrict to official Amazon AMIs."
+  type        = list(string)
+  default     = ["amazon"]
+}
+
+variable "instance_type" {
+  description = "EC2 instance type."
+  type        = string
+  default     = "t3.small"
+}
+
+variable "associate_public_ip" {
+  description = "Whether to associate a public IPv4 address to the instance in the selected subnet."
+  type        = bool
+  default     = true
+}
+
+variable "key_pair_name" {
+  description = "Existing EC2 Key Pair name in the target region (must already exist in AWS)."
+  type        = string
+  default     = "infra-dev-key"
+}
+
+variable "ssh_sg_name" {
+  description = "Existing Security Group name for SSH access."
+  type        = string
+  default     = "ssh_sg_7th_room"
+}
+
+variable "web_sg_name" {
+  description = "Existing Security Group name for web/cluster traffic."
+  type        = string
+  default     = "web_sg_7th_room"
+}
+
+variable "instance_name" {
+  description = "Name tag for the EC2 instance."
+  type        = string
+  default     = "AWS_ec2_sg_7th_room"
+}
+
+variable "environment" {
+  description = "Environment tag (e.g., dev, prod)."
+  type        = string
+  default     = "dev"
+}
