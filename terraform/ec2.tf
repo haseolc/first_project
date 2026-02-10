@@ -7,7 +7,7 @@ data "aws_security_group" "ssh_sg" {
 }
 
 data "aws_security_group" "web_sg" {
-  name = "web-sg_7th_room"
+  name = "web_sg_7th_room"
 }
 
 resource "aws_instance" "AWS_ec2_sg_7th_room" {
@@ -45,3 +45,4 @@ resource "aws_instance" "AWS_ec2_sg_7th_room" {
     Project = "infra-auto"
   }
 }
+
