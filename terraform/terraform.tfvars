@@ -1,2 +1,2 @@
-sg_7th_room_id = "sg-0b1c8f474d06d5059"
-web_sg_7th_room_id = "sg-050b7905a56f71f87"
+sg_7th_room_id = "sg-0174a8293a8f01841"
+web_sg_7th_room_id = "sg-0d1ca1a0b7bb3456e"
