@@ -1,24 +1,21 @@
-- name: Download MySQL 8.0 Community Release RPM
-  ansible.builtin.get_url:
-    url: https://dev.mysql.com/get/mysql80-community-release-el9-3.noarch.rpm
-    dest: /tmp/mysql80-community-release-el9-3.noarch.rpm
-
-- name: Install MySQL Repository
+---
+- name: Enable MySQL module
   ansible.builtin.dnf:
-    name: /tmp/mysql80-community-release-el9-3.noarch.rpm
-    state: present
-
-- name: Import MySQL GPG Key
-  ansible.builtin.rpm_key:
-    state: present
-    key: https://repo.mysql.com/RPM-GPG-KEY-mysql-2023
-
-- name: Install MySQL Community Client
-  ansible.builtin.dnf:
-    name: mysql-community-client
+    name: '@mysql'
     state: present
     update_cache: yes
 
+- name: Install MySQL server
+  ansible.builtin.dnf:
+    name: mysql-server
+    state: present
+    update_cache: yes
+
+- name: Ensure MySQL service is started and enabled
+  ansible.builtin.systemd:
+    name: mysqld
+    state: started
+    enabled: yes
 
 # mysql -h terraform-20260210071207430100000001.cl0aokksg3rp.ap-northeast-2.rds.amazonaws.com -u admin -p
 # SHOW TABLES;
