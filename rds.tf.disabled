@@ -40,7 +40,7 @@ resource "aws_subnet" "private_b" {
 
 # RDS 보안 그룹
 resource "aws_security_group" "rds_sg" {
-  name        = "rds-sg-team"
+  name        = "rds_sg_7th_room"
   description = "Allow inbound traffic from team SGs"
   vpc_id      = data.aws_vpc.default.id
 
@@ -59,6 +59,10 @@ resource "aws_security_group" "rds_sg" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "rds_sg_7th_room"
   }
 }
 
