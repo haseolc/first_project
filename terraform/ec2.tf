@@ -13,7 +13,7 @@ resource "aws_instance" "AWS_ec2_sg_7th_room" {
     aws_security_group.web-sg.id
   ]
   
-  key_name = "7th_room-key"                                 # 키페어 이름
+  key_name = "infra-dev-key"                               # 키페어 이름
 
   # ★ [보안/인프라 최적화] 루트 디스크 용량 설정 (20GB)
   root_block_device {
@@ -31,4 +31,5 @@ resource "aws_instance" "AWS_ec2_sg_7th_room" {
   tags = {
     Name = "AWS_ec2_sg_7th_room"
   }
+
 }
