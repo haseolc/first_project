@@ -1,1 +1,5 @@
-
+sudo dnf update -y
+sudo dnf install -y mysql
+mysql -h terraform-20260210071207430100000001.cl0aokksg3rp.ap-northeast-2.rds.amazonaws.com -u admin -p
+SHOW TABLES;
+SELECT * FROM admins;
