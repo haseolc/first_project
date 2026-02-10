@@ -1,4 +1,14 @@
 ---
+- name: "스왑 메모리 생성 및 활성화 (2GB)"
+  ansible.builtin.raw: |
+    if [ ! -f /swapfile ]; then
+      sudo fallocate -l 2G /swapfile
+      sudo chmod 600 /swapfile
+      sudo mkswap /swapfile
+      sudo swapon /swapfile
+      echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+    fi
+  changed_when: false
 # 1. 앤서블의 파이썬 엔진을 거치지 않고 직접 패키지 설치 (Raw)
 - name: "시스템 기본 패키지 설치 (Raw - AL2023 호환)"
   ansible.builtin.raw: sudo dnf install -y python3 python3-pip git python3-libselinux
