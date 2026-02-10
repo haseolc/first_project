@@ -29,7 +29,7 @@ jobs:
           context: ./myapp/api
           push: true
           # 이미지 이름 
-          tags: ${{ secrets.DOCKER_USERNAME }}/docker_test:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/myapi:latest # /docker_test:latest 이거 뭐야 증말
           #오류 시 여기 수정 /myapi:latest
   terraform:
     runs-on: ubuntu-latest
