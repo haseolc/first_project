@@ -1,7 +1,3 @@
-/*
-  EC2 생성 (7팀 메인 서버)
-*/
-
 data "aws_security_group" "ssh_sg" {
   name = var.ssh_sg_name
 }
@@ -23,7 +19,6 @@ resource "aws_instance" "AWS_ec2_sg_7th_room" {
     data.aws_security_group.web_sg.id
   ]
 
-  # root volume 설정은 상수로 유지 (변수 사용 안 함)
   root_block_device {
     volume_size           = 20
     volume_type           = "gp3"
@@ -36,9 +31,16 @@ resource "aws_instance" "AWS_ec2_sg_7th_room" {
     }
   }
 
+  # MySQL 설치
+  user_data = <<-EOF
+              #!/bin/bash
+              sudo dnf install -y mysql
+              EOF
+
   tags = {
     Name        = var.instance_name
     Environment = var.environment
     Project     = "infra-auto"
   }
 }
+
