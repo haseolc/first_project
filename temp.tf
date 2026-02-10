@@ -1,3 +1,11 @@
+provider "aws" {
+  region = "ap-northeast-2"
+}
+
+data "aws_vpc" "default" {
+  default = true
+}
+
 resource "aws_security_group" "ssh_sg" {
   name = "ssh_sg_7th_room"
   vpc_id = data.aws_vpc.default.id
@@ -59,7 +67,7 @@ resource "aws_security_group" "web_sg" {
     from_port       = 22
     to_port         = 22
     protocol        = "tcp"
-    security_groups = [aws_security_group.ssh_sg_7th_room.id]
+    security_groups = [aws_security_group.ssh_sg.id]
   }
 
   ingress {
@@ -90,10 +98,10 @@ resource "aws_security_group" "web_sg" {
   }
 }
 
-output "sg_7th_room_id" {
-  value = aws_security_group.ssh_sg_7th_room.id
+output "ssh_sg_7th_room" {
+  value = aws_security_group.ssh_sg.id
 }
 
-output "web_sg_7th_room_id" {
-  value = aws_security_group.web_sg_7th_room.id
+output "web_sg_7th_room" {
+  value = aws_security_group.web_sg.id
 }
