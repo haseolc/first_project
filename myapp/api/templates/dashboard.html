@@ -1,10 +1,310 @@
 <!DOCTYPE html>
-<html>
-<head>
-    <title>Dashboard</title>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Admin Dashboard - Metrics Overview</title>
+<!-- Google Fonts: Inter -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#135bec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101622",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
 </head>
-<body>
-    <h1>환영합니다, {{ admin_id }}!</h1>
-    <p>여기서 나중에 시각화 자료, Chart.js, Grafana Embed 등을 표시할 수 있습니다.</p>
-</body>
-</html>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display transition-colors duration-200">
+<div class="flex h-screen overflow-hidden">
+<!-- Sidebar Navigation -->
+<aside class="w-64 flex-shrink-0 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col">
+<div class="p-6 flex items-center gap-3">
+<div class="p-1.5 bg-primary rounded-lg text-white">
+<span class="material-symbols-outlined block">monitoring</span>
+</div>
+<h2 class="text-xl font-bold tracking-tight">MetricsHub</h2>
+</div>
+<nav class="flex-1 px-4 space-y-1 mt-2">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg group transition-colors" href="#">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-primary">grid_view</span>
+<span class="text-sm font-medium leading-normal">Overview</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 bg-primary/10 text-primary rounded-lg group transition-colors" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="text-sm font-medium leading-normal">Metrics</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg group transition-colors" href="#">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-primary">description</span>
+<span class="text-sm font-medium leading-normal">Logs</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg group transition-colors" href="#">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-primary">hub</span>
+<span class="text-sm font-medium leading-normal">Nodes</span>
+</a>
+<div class="pt-4 pb-2 px-3">
+<p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Configuration</p>
+</div>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg group transition-colors" href="#">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-primary">settings</span>
+<span class="text-sm font-medium leading-normal">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg group transition-colors" href="#">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-primary">security</span>
+<span class="text-sm font-medium leading-normal">IAM &amp; Security</span>
+</a>
+</nav>
+<div class="p-4 border-t border-slate-200 dark:border-slate-800">
+<div class="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-xl flex items-center gap-3">
+<div class="size-10 rounded-full bg-cover bg-center border-2 border-white dark:border-slate-700" data-alt="User avatar placeholder profile picture" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAFttmSKNVEzjYlkdq0NcjtldcEtkfVnxKDJoDds1u7bP_ddVbdod2Apzn22_wk-_31261D8rG9Q5V_8JdpMfncij32sCZaOAo2kReuLgsD_nLfIH7V-UWi9LecUtiKCn5_sn_WaonNy8OueY_H7R8YV5LBMASf2IHL7WHoy22OyOS0qFltlxwUlmfElpggK7decDYIKs-z4xbXMKrF5a3bMHegUeYf9CKzDVPRIBE9NvYisjevh5PkhWzBXGxoedo2iXFRo7nhaGY')"></div>
+<div class="flex-1 min-w-0">
+<p class="text-xs font-bold truncate">Admin-402</p>
+<p class="text-[10px] text-slate-500 font-medium truncate uppercase">Superuser</p>
+</div>
+<button class="text-slate-400 hover:text-red-500 transition-colors">
+<span class="material-symbols-outlined text-xl">logout</span>
+</button>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col min-w-0 overflow-hidden">
+<!-- Global Header -->
+<header class="h-16 flex items-center justify-between px-8 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 z-10">
+<div class="flex items-center gap-4 flex-1 max-w-xl">
+<label class="relative w-full">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+<span class="material-symbols-outlined text-xl leading-none">search</span>
+</span>
+<input class="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary placeholder:text-slate-500 dark:text-slate-200" placeholder="Search resources, metrics, or alerts..." type="text"/>
+</label>
+</div>
+<div class="flex items-center gap-6 ml-4">
+<button class="relative p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+</button>
+<div class="h-6 w-px bg-slate-200 dark:bg-slate-800"></div>
+<div class="flex items-center gap-3">
+<div class="text-right">
+<p class="text-sm font-semibold leading-none">Welcome, Admin-402!</p>
+<p class="text-[11px] text-slate-500 font-medium mt-1">Status: Operational</p>
+</div>
+<div class="size-9 rounded-lg bg-primary/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">person</span>
+</div>
+</div>
+</div>
+</header>
+<!-- Scrollable Content Area -->
+<div class="flex-1 overflow-y-auto p-8 space-y-8">
+<!-- Page Title and Time Filters -->
+<div class="flex items-end justify-between">
+<div>
+<h1 class="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Metrics Overview</h1>
+<p class="text-slate-500 dark:text-slate-400 mt-1">Real-time system telemetry and Prometheus performance tracking.</p>
+</div>
+<div class="flex items-center gap-2 bg-white dark:bg-slate-900 p-1 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
+<button class="px-3 py-1.5 text-xs font-bold rounded-md bg-primary text-white">Last 24h</button>
+<button class="px-3 py-1.5 text-xs font-bold rounded-md text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800">7 Days</button>
+<button class="px-3 py-1.5 text-xs font-bold rounded-md text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800">30 Days</button>
+<div class="w-px h-4 bg-slate-200 dark:bg-slate-800 mx-1"></div>
+<button class="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/5 rounded-md">
+<span class="material-symbols-outlined text-sm">refresh</span>
+                            Live Update
+                        </button>
+</div>
+</div>
+<!-- Main Visualization Panel (Grafana Style) -->
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+<div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/20">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">monitoring</span>
+<h3 class="font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide text-xs">System Throughput &amp; Error Rate</h3>
+</div>
+<div class="flex gap-4">
+<div class="flex items-center gap-2">
+<span class="size-2 rounded-full bg-primary"></span>
+<span class="text-[11px] font-bold text-slate-500 uppercase">Requests</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="size-2 rounded-full bg-red-400"></span>
+<span class="text-[11px] font-bold text-slate-500 uppercase">Errors</span>
+</div>
+</div>
+</div>
+<div class="p-8">
+<div class="relative h-[320px] w-full">
+<!-- Simulated Chart Grid -->
+<div class="absolute inset-0 grid grid-cols-6 grid-rows-4 pointer-events-none">
+<div class="border-r border-b border-slate-100 dark:border-slate-800/50"></div>
+<div class="border-r border-b border-slate-100 dark:border-slate-800/50"></div>
+<div class="border-r border-b border-slate-100 dark:border-slate-800/50"></div>
+<div class="border-r border-b border-slate-100 dark:border-slate-800/50"></div>
+<div class="border-r border-b border-slate-100 dark:border-slate-800/50"></div>
+<div class="border-b border-slate-100 dark:border-slate-800/50"></div>
+<div class="border-r border-b border-slate-100 dark:border-slate-800/50"></div>
+<div class="border-r border-b border-slate-100 dark:border-slate-800/50"></div>
+<div class="border-r border-b border-slate-100 dark:border-slate-800/50"></div>
+<div class="border-r border-b border-slate-100 dark:border-slate-800/50"></div>
+<div class="border-r border-b border-slate-100 dark:border-slate-800/50"></div>
+<div class="border-b border-slate-100 dark:border-slate-800/50"></div>
+<div class="border-r border-b border-slate-100 dark:border-slate-800/50"></div>
+<div class="border-r border-b border-slate-100 dark:border-slate-800/50"></div>
+<div class="border-r border-b border-slate-100 dark:border-slate-800/50"></div>
+<div class="border-r border-b border-slate-100 dark:border-slate-800/50"></div>
+<div class="border-r border-b border-slate-100 dark:border-slate-800/50"></div>
+<div class="border-b border-slate-100 dark:border-slate-800/50"></div>
+<div class="border-r border-slate-100 dark:border-slate-800/50"></div>
+<div class="border-r border-slate-100 dark:border-slate-800/50"></div>
+<div class="border-r border-slate-100 dark:border-slate-800/50"></div>
+<div class="border-r border-slate-100 dark:border-slate-800/50"></div>
+<div class="border-r border-slate-100 dark:border-slate-800/50"></div>
+<div></div>
+</div>
+<!-- SVG Chart Path -->
+<svg class="absolute inset-0 w-full h-full overflow-visible" preserveaspectratio="none">
+<!-- Requests Path -->
+<path d="M0 240 Q 50 200 100 220 T 200 140 T 300 180 T 400 100 T 500 140 T 600 60 T 700 90 T 800 40 T 900 80 T 1000 20" fill="none" stroke="#135bec" stroke-linecap="round" stroke-width="3" vector-effect="non-scaling-stroke"></path>
+<path d="M0 240 Q 50 200 100 220 T 200 140 T 300 180 T 400 100 T 500 140 T 600 60 T 700 90 T 800 40 T 900 80 T 1000 20 V 320 H 0 Z" fill="url(#gradient-blue)" opacity="0.1"></path>
+<!-- Errors Path -->
+<path d="M0 300 Q 100 280 200 310 T 400 290 T 600 305 T 800 285 T 1000 310" fill="none" stroke="#f87171" stroke-dasharray="4" stroke-linecap="round" stroke-width="2" vector-effect="non-scaling-stroke"></path>
+<defs>
+<lineargradient id="gradient-blue" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#135bec"></stop>
+<stop offset="100%" stop-color="#135bec" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
+</svg>
+</div>
+<div class="flex justify-between mt-4 text-[11px] font-bold text-slate-400 uppercase tracking-widest px-2">
+<span>00:00</span>
+<span>04:00</span>
+<span>08:00</span>
+<span>12:00</span>
+<span>16:00</span>
+<span>20:00</span>
+<span>23:59</span>
+</div>
+</div>
+</div>
+<!-- Metrics Status Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex justify-between items-start mb-4">
+<div class="size-10 rounded-lg bg-green-500/10 flex items-center justify-center text-green-500">
+<span class="material-symbols-outlined">check_circle</span>
+</div>
+<span class="text-xs font-bold text-green-500 bg-green-500/10 px-2 py-0.5 rounded">Healthy</span>
+</div>
+<p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">System Uptime</p>
+<h4 class="text-2xl font-black text-slate-900 dark:text-white">99.98%</h4>
+<div class="mt-4 h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-green-500 rounded-full" style="width: 99.98%"></div>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex justify-between items-start mb-4">
+<div class="size-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">memory</span>
+</div>
+<span class="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">Optimized</span>
+</div>
+<p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Server Load</p>
+<h4 class="text-2xl font-black text-slate-900 dark:text-white">42.5%</h4>
+<div class="mt-4 h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 42.5%"></div>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex justify-between items-start mb-4">
+<div class="size-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500">
+<span class="material-symbols-outlined">rocket_launch</span>
+</div>
+<span class="text-xs font-bold text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded">+12.5%</span>
+</div>
+<p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Total Requests</p>
+<h4 class="text-2xl font-black text-slate-900 dark:text-white">1,248,392</h4>
+<p class="text-xs text-slate-500 mt-2">Previous period: 1.1M</p>
+</div>
+</div>
+<!-- Other Application Information Section -->
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+<div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3 bg-slate-50/50 dark:bg-slate-800/20">
+<span class="material-symbols-outlined text-slate-400">info</span>
+<h3 class="font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide text-xs">Application Context &amp; Health Details</h3>
+</div>
+<div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-12">
+<div class="space-y-4">
+<h4 class="text-lg font-bold">Summary Status</h4>
+<p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                                The central processing cluster is currently operating within expected parameters. Latency across North American nodes has stabilized after the 04:00 UTC patch deployment. We are seeing a slight increase in caching efficiency (now at 84%) which has reduced downstream pressure on the primary database layer.
+                            </p>
+<div class="flex flex-wrap gap-2 pt-2">
+<div class="flex items-center gap-2 px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full">
+<span class="size-2 rounded-full bg-green-500"></span>
+<span class="text-xs font-medium text-slate-600 dark:text-slate-400">DB Connections: OK</span>
+</div>
+<div class="flex items-center gap-2 px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full">
+<span class="size-2 rounded-full bg-green-500"></span>
+<span class="text-xs font-medium text-slate-600 dark:text-slate-400">Redis: Healthy</span>
+</div>
+<div class="flex items-center gap-2 px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full">
+<span class="size-2 rounded-full bg-blue-500"></span>
+<span class="text-xs font-medium text-slate-600 dark:text-slate-400">API Gateway: Active</span>
+</div>
+</div>
+</div>
+<div class="bg-slate-50 dark:bg-slate-800/30 p-6 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
+<h4 class="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Infrastructure Map</h4>
+<div class="aspect-video w-full rounded-lg bg-slate-200 dark:bg-slate-700 relative overflow-hidden">
+<div class="absolute inset-0 bg-cover bg-center opacity-30 mix-blend-multiply" data-alt="Abstract world map showing server locations" data-location="Global Server Distribution Map" style="background-image: url('https://placeholder.pics/svg/300')"></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="relative flex flex-col items-center">
+<div class="size-4 bg-primary rounded-full animate-ping absolute opacity-75"></div>
+<div class="size-4 bg-primary rounded-full relative"></div>
+<span class="mt-2 text-[10px] font-black bg-white dark:bg-slate-900 px-2 py-0.5 rounded shadow-sm">Primary: US-East-1</span>
+</div>
+</div>
+<div class="absolute top-1/4 right-1/4">
+<div class="size-3 bg-slate-400 rounded-full opacity-50"></div>
+</div>
+<div class="absolute bottom-1/3 left-1/2">
+<div class="size-3 bg-slate-400 rounded-full opacity-50"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

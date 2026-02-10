@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: myapi
-        image: jeongseungmin/docker_test:latest
+        image: kimsewon/myapi:latest
         #image: kimsewon/myapi:latest
         imagePullPolicy: Always
         ports:
