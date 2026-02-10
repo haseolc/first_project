@@ -22,18 +22,27 @@
     name: grafana
     state: present
 
-# 3. Grafana 서비스 실행 및 부팅 시 자동 시작 설정
+# 3. Grafana 기본 포트를 30000으로 변경 (추가된 부분)
+- name: Grafana 설정 파일에서 포트 변경 (3000 -> 30000)
+  become: yes
+  lineinfile:
+    path: /etc/grafana/grafana.ini
+    regexp: '^;http_port = 3000'
+    line: 'http_port = 30000'
+    backrefs: yes
+
+# 4. Grafana 서비스 실행 및 부팅 시 자동 시작 설정
 - name: Grafana 서비스 시작 및 활성화
   become: yes
   systemd:
     name: grafana-server
-    state: started
+    state: restarted  # 설정 변경 후 반영을 위해 restarted 권장
     enabled: yes
     daemon_reload: yes
 
-# 4. (선택) 설치 확인을 위한 대기
+# 5. 설치 확인을 위한 대기
 - name: Grafana 포트(30000) 오픈 대기
   wait_for:
     port: 30000
     delay: 5
-    timeout: 30
+    timeout: 60
