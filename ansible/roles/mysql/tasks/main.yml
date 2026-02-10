@@ -5,7 +5,7 @@
 
 - name: Install MySQL client
   ansible.builtin.dnf:
-    name: mysql
+    name: mysql8
     state: present
 
 # sudo dnf update -y
