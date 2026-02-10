@@ -22,7 +22,7 @@ spec:
         - containerPort: 5000
         env:
         - name: DB_HOST
-          value: terraform-20260210071207430100000001.cl0aokksg3rp.ap-northeast-2.rds.amazonaws.com # <---------- RDS 엔드포인트
+          value: terraform-20260210190831067100000001.cl0aokksg3rp.ap-northeast-2.rds.amazonaws.com # <---------- RDS 엔드포인트
         - name: DB_USER
           value: root
         - name: DB_PASSWORD
@@ -68,4 +68,5 @@ spec:
             port:
 
               number: 80
+
 
