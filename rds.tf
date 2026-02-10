@@ -1,4 +1,3 @@
-# 1. 프로바이더 및 변수 설정
 provider "aws" {
   region = "ap-northeast-2"
 }
@@ -10,21 +9,21 @@ variable "db_password" {
   default     = "admin1234!" 
 }
 
-# 2. 기존(Default) VPC 정보 조회
+# 기존(Default) VPC 정보 조회
 data "aws_vpc" "default" {
   default = true
 }
 
-# 3. 외부 보안 그룹 2개 정보 조회 (이름으로 ID 찾아오기)
-data "aws_security_group" "sg_room" {
-  name = "sg_7th_room"
+# 외부 보안 그룹 2개 정보 조회 (이름으로 ID 찾아오기)
+data "aws_security_group" "ssh_sg" {
+  name = "ssh_sg_7th_room"
 }
 
-data "aws_security_group" "sg_web" {
-  name = "web-sg"
+data "aws_security_group" "web_sg" {
+  name = "web_sg_7th_room"
 }
 
-# 4. RDS용 프라이빗 서브넷 2개 생성
+# RDS용 프라이빗 서브넷 2개 생성
 resource "aws_subnet" "private_a" {
   vpc_id            = data.aws_vpc.default.id
   cidr_block        = "172.31.64.0/20" 
@@ -39,7 +38,7 @@ resource "aws_subnet" "private_b" {
   tags = { Name = "rds-private-b" }
 }
 
-# 5. RDS 보안 그룹 (3306 포트 오픈)
+# RDS 보안 그룹
 resource "aws_security_group" "rds_sg" {
   name        = "rds-sg-team"
   description = "Allow inbound traffic from team SGs"
@@ -49,10 +48,9 @@ resource "aws_security_group" "rds_sg" {
     from_port       = 3306
     to_port         = 3306
     protocol        = "tcp"
-    # 조회해온 2개 보안 그룹 ID를 리스트로 넣어 연결합니다.
     security_groups = [
-      data.aws_security_group.sg_room.id,
-      data.aws_security_group.sg_web.id
+      data.aws_security_group.ssh_sg.id,
+      data.aws_security_group.web_sg.id
     ]
   }
 
@@ -64,18 +62,18 @@ resource "aws_security_group" "rds_sg" {
   }
 }
 
-# 6. RDS 서브넷 그룹 생성
+# RDS 서브넷 그룹 생성
 resource "aws_db_subnet_group" "rds_subnet_group" {
-  name       = "main-rds-subnet-group"
+  name       = "rds-subnet-group"
   subnet_ids = [aws_subnet.private_a.id, aws_subnet.private_b.id]
 }
 
-# 7. RDS 인스턴스 설정 (프리티어 & 비용 방어 최적화)
+# RDS 인스턴스 설정 (프리티어 & 비용 방어 최적화)
 resource "aws_db_instance" "db" {
   allocated_storage      = 20
   storage_type           = "gp2"
   engine                 = "mysql"
-  engine_version         = "8.0" # 버전 명시 권장
+  engine_version         = "8.0"
   instance_class         = "db.t3.micro"
   db_name                = "mydb"
   username               = "admin"
@@ -84,7 +82,7 @@ resource "aws_db_instance" "db" {
   db_subnet_group_name   = aws_db_subnet_group.rds_subnet_group.name
   vpc_security_group_ids = [aws_security_group.rds_sg.id]
 
-  # [비용 방어: 매우 중요]
+  # 비용 방어
   multi_az                = false
   availability_zone       = "ap-northeast-2a"
   publicly_accessible     = false
