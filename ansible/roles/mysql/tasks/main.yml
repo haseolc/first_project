@@ -1,6 +1,5 @@
 ---
 # CLI 필요로 MySQL Server 설치 (Client만 설치 불가)
----
 # MySQL 서버 설치 (Amazon Linux 2023)
 - name: Enable MySQL 8.0 module
   ansible.builtin.dnf:
