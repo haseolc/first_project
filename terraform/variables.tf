@@ -22,6 +22,12 @@ variable "instance_type" {
   default     = "t3.small"
 }
 
+variable "ami_id" {
+  description = "Amazon Linux 2023 AMI ID (서울 리전)"
+  type        = string
+  default     = "ami-0dec6548c7c0d0a9"
+}
+
 variable "associate_public_ip" {
   description = "Whether to associate a public IPv4 address to the instance in the selected subnet."
   type        = bool
