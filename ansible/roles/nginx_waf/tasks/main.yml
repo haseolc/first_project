@@ -1,6 +1,5 @@
 ---
-# 1. Nginx Ingress 컨트롤러 설치 (WAF 옵션 포함)
-- name: "Nginx Ingress WAF 설치 (Helm 모듈 사용)"
+- name: "Nginx Ingress WAF 컨트롤러 설치 (통합 및 기본 클래스 설정)"
   kubernetes.core.helm:
     name: nginx-waf
     chart_ref: ingress-nginx
@@ -10,175 +9,33 @@
     kubeconfig: /etc/rancher/k3s/k3s.yaml
     values:
       controller:
+        kind: DaemonSet
+        hostNetwork: true
+        dnsPolicy: ClusterFirstWithHostNet
+        admissionWebhooks: { enabled: false }
+        service: { type: ClusterIP }
+        # ★ [핵심 수정] 이 컨트롤러를 기본 인그레스 관리자로 지정
+        ingressClassResource:
+          name: nginx
+          enabled: true
+          default: true
+          controllerValue: "k8s.io/ingress-nginx"
+        # 클래스 지정이 없는 인그레스도 감시하도록 설정
+        watchIngressWithoutClass: true
         config:
           enable-modsecurity: "true"
           enable-owasp-modsecurity-crs: "true"
-        hostNetwork: true
-        dnsPolicy: ClusterFirstWithHostNet
-        kind: DaemonSet
-        service:
-          type: ClusterIP
-        admissionWebhooks:
-          enabled: false
+          modsecurity-snippet: |
+            SecRuleEngine On
+            SecRequestBodyAccess On
+            SecAuditEngine RelevantOnly
+            SecAuditLog /dev/stdout
     state: present
-  changed_when: false
 
-# 2. 컨트롤러가 완전히 뜰 때까지 잠시 대기
-- name: "Nginx 컨트롤러 부팅 대기"
-  ansible.builtin.shell: sleep 30
-  changed_when: false
-
-- name: Patch controller ConfigMap to force ModSecurity snippet (block mode + audit to stdout)
-  raw: |
-    cat <<'EOF' | sudo /usr/local/bin/k3s kubectl -n ingress-nginx apply -f -
-    apiVersion: v1
-    kind: ConfigMap
-    metadata:
-      name: nginx-waf-ingress-nginx-controller
-      namespace: ingress-nginx
-    data:
-      enable-modsecurity: "true"
-      enable-owasp-modsecurity-crs: "true"
-      modsecurity-snippet: |
-        SecRuleEngine On
-        SecRequestBodyAccess On
-        SecAuditEngine RelevantOnly
-        SecAuditLogParts ABIJDEFHZ
-        SecAuditLog /dev/stdout
-    EOF
-  changed_when: false
-
-- name: Restart controller to apply ConfigMap
-  raw: |
-    sudo /usr/local/bin/k3s kubectl -n ingress-nginx rollout restart ds/nginx-waf-ingress-nginx-controller
-    sudo /usr/local/bin/k3s kubectl -n ingress-nginx rollout status ds/nginx-waf-ingress-nginx-controller --timeout=180s
-  changed_when: false
-
-# 3. HTTPS 테스트용 자체 서명 인증서 생성 및 K3s 등록
-- name: "자체 서명 인증서 생성 및 Secret 등록"
+- name: "HTTPS용 자체 서명 인증서 생성 및 Secret 등록"
   ansible.builtin.shell: |
     if [ ! -f /tmp/tls.key ]; then
-      openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-        -keyout /tmp/tls.key -out /tmp/tls.crt \
-        -subj "/CN=7th-room-waf"
+      openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /tmp/tls.key -out /tmp/tls.crt -subj "/CN=7th-room-waf"
     fi
-    /usr/local/bin/kubectl create secret tls waf-tls-secret \
-      --cert=/tmp/tls.crt --key=/tmp/tls.key \
-      -n default --dry-run=client -o yaml | /usr/local/bin/kubectl apply -f -
+    /usr/local/bin/kubectl create secret tls waf-tls-secret --cert=/tmp/tls.crt --key=/tmp/tls.key -n default --dry-run=client -o yaml | /usr/local/bin/kubectl apply -f -
   changed_when: false
-
-# 4. ★ 생략 가능: 모든 트래픽을 WAF로 강제 통과시키는 Catch-all 규칙 생성
-# 본 규칙은 http/https 테스트를 위해 작업 한 코드 문제 생
-- name: "WAF 차단 규칙(Ingress) 배포"
-  ansible.builtin.shell: |
-    cat <<EOF | /usr/local/bin/kubectl apply -f -
-    apiVersion: networking.k8s.io/v1
-    kind: Ingress
-    metadata:
-      name: waf-final-gate
-      annotations:
-        nginx.ingress.kubernetes.io/enable-modsecurity: "true"
-        nginx.ingress.kubernetes.io/modsecurity-snippet: |
-          SecRuleEngine On
-          SecDefaultAction "phase:1,deny,log,status:403"
-    spec:
-      ingressClassName: nginx
-      tls:
-      - secretName: waf-tls-secret # 443 포트 보호용
-      rules:
-      - http: # host를 적지 않아서 모든 IP 접속에 대응
-          paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: dummy-service
-                port:
-                  number: 80
-    EOF
-  changed_when: false
-
-- name: Deploy demo echo app + ingress (for verification)
-  raw: |
-    sudo /usr/local/bin/k3s kubectl create ns demo || true
-    sudo /usr/local/bin/k3s kubectl -n demo create deployment echo --image=ealen/echo-server --replicas=1 || true
-    sudo /usr/local/bin/k3s kubectl -n demo expose deployment echo --port 80 || true
-    cat <<'EOF' | sudo /usr/local/bin/k3s kubectl apply -f -
-    apiVersion: networking.k8s.io/v1
-    kind: Ingress
-    metadata:
-      name: echo
-      namespace: demo
-      annotations:
-        nginx.ingress.kubernetes.io/enable-modsecurity: "true"
-        nginx.ingress.kubernetes.io/enable-owasp-core-rules: "true"
-    spec:
-      ingressClassName: nginx
-      rules:
-      - http:
-          paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: echo
-                port:
-                  number: 80
-    EOF
-  changed_when: false
-
-- name: Wait for demo pod
-  raw: |
-    sudo /usr/local/bin/k3s kubectl -n demo rollout status deploy/echo --timeout=180s
-  changed_when: false
-
-- name: Smoke test (should return 200 or 403; must not be 000)
-  raw: |
-    curl -s -o /dev/null -w "%{http_code}\n" "http://127.0.0.1/?q=%3Cscript%3Ealert(1)%3C%2Fscript%3E"
-  register: waf_code
-  changed_when: false
-
-- name: Show smoke test HTTP code
-  debug:
-    var: waf_code.stdout
-
-- name: Verify Nginx Ingress Controller Pod status
-  raw: |
-    sudo /usr/local/bin/k3s kubectl get pods -n ingress-nginx
-  register: nginx_pods_status
-  changed_when: false
-
-- name: Show Nginx Ingress Controller Pod status
-  debug:
-    var: nginx_pods_status.stdout_lines
-
-- name: Verify Nginx Ingress Controller Service and NodePort
-  raw: |
-    sudo /usr/local/bin/k3s kubectl get svc -n ingress-nginx
-  register: nginx_svc_status
-  changed_when: false
-
-- name: Show Nginx Ingress Controller Service and NodePort
-  debug:
-    var: nginx_svc_status.stdout_lines
-
-- name: Check ModSecurity activation in Ingress Controller logs
-  raw: |
-    sudo /usr/local/bin/k3s kubectl logs -n ingress-nginx -l app.kubernetes.io/name=ingress-nginx | grep -i "ModSecurity" || true
-  register: modsecurity_log_check
-  changed_when: false
-
-- name: Show ModSecurity activation in logs
-  debug:
-    var: modsecurity_log_check.stdout_lines
-
-- name: Check ModSecurity configuration inside Nginx container
-  raw: |
-    POD_NAME=$(sudo /usr/local/bin/k3s kubectl get pods -n ingress-nginx -l app.kubernetes.io/name=ingress-nginx -o jsonpath='{.items[0].metadata.name}')
-    sudo /usr/local/bin/k3s kubectl exec -it -n ingress-nginx "$POD_NAME" -- nginx -T | grep -i "modsecurity" || true
-  register: modsecurity_config_check
-  changed_when: false
-
-- name: Show ModSecurity configuration check
-  debug:
-    var: modsecurity_config_check.stdout_lines
