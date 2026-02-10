@@ -24,9 +24,9 @@ spec:
         - name: DB_HOST
           value: terraform-20260210190831067100000001.cl0aokksg3rp.ap-northeast-2.rds.amazonaws.com # <---------- RDS 엔드포인트
         - name: DB_USER
-          value: root
+          value: admin
         - name: DB_PASSWORD
-          value: "root_pw"
+          value: "admin1234!"
         - name: DB_NAME
           value: admin_db
 ---
@@ -68,5 +68,6 @@ spec:
             port:
 
               number: 80
+
 
 
