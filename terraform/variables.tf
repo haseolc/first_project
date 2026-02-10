@@ -4,11 +4,11 @@ variable "aws_region" {
   default     = "ap-northeast-2"
 }
 
-variable "ami_name_pattern" {
-  description = "AMI name pattern used to pick the most recent Amazon Linux 2023 x86_64 image."
-  type        = string
-  default     = "al2023-ami-*-x86_64"
-}
+#variable "ami_name_pattern" { # 오류나서 주석처리 해놓았습니다.
+#  description = "AMI name pattern used to pick the most recent Amazon Linux 2023 x86_64 image."
+#  type        = string
+#  default     = "al2023-ami-*-x86_64"
+#}
 
 variable "ami_owners" {
   description = "List of AMI owner accounts. Use ['amazon'] to restrict to official Amazon AMIs."
@@ -25,7 +25,7 @@ variable "instance_type" {
 variable "ami_id" {
   description = "Amazon Linux 2023 AMI ID (서울 리전)"
   type        = string
-  default     = "ami-0dec6548c7c0d0a9"
+  default     = "ami-0dec6548c7c0d0a96"
 }
 
 variable "associate_public_ip" {
