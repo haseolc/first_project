@@ -1,39 +1,59 @@
-# 아직 수정 중 ~
-
-# Provider
+# 1. 프로바이더 및 변수 설정
 provider "aws" {
   region = "ap-northeast-2"
 }
 
-# VPC / Subnet (기존 것 참조)
+variable "db_password" {
+  description = "RDS root password"
+  type        = string
+  # 보안을 위해 default는 비워두고 GitHub Secrets나 실행 시 입력 권장
+  default     = "admin1234!" 
+}
+
+# 2. 기존(Default) VPC 정보 조회
 data "aws_vpc" "default" {
   default = true
 }
 
-# 기본 VPC의 private subnet들
-data "aws_subnets" "private" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.default.id]
-  }
-
-  filter {
-    name   = "map-public-ip-on-launch"
-    values = ["false"]
-  }
+# 3. 외부 보안 그룹 2개 정보 조회 (이름으로 ID 찾아오기)
+data "aws_security_group" "sg_room" {
+  name = "sg_7th_room"
 }
 
-# RDS Security Group
-resource "aws_security_group" "rds_sg" {
-  name   = "rds-mysql-sg"
-  vpc_id = data.aws_vpc.default.id
+data "aws_security_group" "sg_web" {
+  name = "web-sg"
+}
 
-  # EC2 (sg_7th_room) 에서만 MySQL 접근 허용
+# 4. RDS용 프라이빗 서브넷 2개 생성
+resource "aws_subnet" "private_a" {
+  vpc_id            = data.aws_vpc.default.id
+  cidr_block        = "172.31.64.0/20" 
+  availability_zone = "ap-northeast-2a"
+  tags = { Name = "rds-private-a" }
+}
+
+resource "aws_subnet" "private_b" {
+  vpc_id            = data.aws_vpc.default.id
+  cidr_block        = "172.31.80.0/20"
+  availability_zone = "ap-northeast-2b"
+  tags = { Name = "rds-private-b" }
+}
+
+# 5. RDS 보안 그룹 (3306 포트 오픈)
+resource "aws_security_group" "rds_sg" {
+  name        = "rds-sg-team"
+  description = "Allow inbound traffic from team SGs"
+  vpc_id      = data.aws_vpc.default.id
+
   ingress {
     from_port       = 3306
     to_port         = 3306
     protocol        = "tcp"
-    security_groups = [aws_security_group.sg_7th_room.id] # ---------------------------------> 수정 예정
+    # 조회해온 2개 보안 그룹 ID를 리스트로 넣어 연결합니다.
+    security_groups = [
+      data.aws_security_group.sg_room.id,
+      data.aws_security_group.sg_web.id
+    ]
   }
 
   egress {
@@ -42,53 +62,33 @@ resource "aws_security_group" "rds_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
-  tags = {
-    Name = "rds-mysql-sg"
-  }
 }
 
-# RDS Subnet Group
-resource "aws_db_subnet_group" "mydb_subnet" {
-  name       = "mydb-subnet-group"
-  subnet_ids = data.aws_subnets.private.ids
-
-  tags = {
-    Name = "mydb-subnet-group"
-  }
+# 6. RDS 서브넷 그룹 생성
+resource "aws_db_subnet_group" "rds_subnet_group" {
+  name       = "main-rds-subnet-group"
+  subnet_ids = [aws_subnet.private_a.id, aws_subnet.private_b.id]
 }
 
-# RDS Instance
-resource "aws_db_instance" "mydb" {
-  identifier              = "mydb"
-  engine                  = "mysql"
-  engine_version          = "8.0"
-  instance_class          = "db.t3.micro"
-  allocated_storage       = 20
+# 7. RDS 인스턴스 설정 (프리티어 & 비용 방어 최적화)
+resource "aws_db_instance" "db" {
+  allocated_storage      = 20
+  storage_type           = "gp2"
+  engine                 = "mysql"
+  engine_version         = "8.0" # 버전 명시 권장
+  instance_class         = "db.t3.micro"
+  db_name                = "mydb"
+  username               = "admin"
+  password               = var.db_password
 
-  db_name                 = "mydb"
-  username                = var.db_username
-  password                = var.db_password
+  db_subnet_group_name   = aws_db_subnet_group.rds_subnet_group.name
+  vpc_security_group_ids = [aws_security_group.rds_sg.id]
 
+  # [비용 방어: 매우 중요]
+  multi_az                = false
+  availability_zone       = "ap-northeast-2a"
   publicly_accessible     = false
-  skip_final_snapshot     = true
-  backup_retention_period = 7
-
-  vpc_security_group_ids  = [aws_security_group.rds_sg.id]
-  db_subnet_group_name    = aws_db_subnet_group.mydb_subnet.name
-
-  tags = {
-    Name = "mydb"
-    Environment = "dev"
-  }
-}
-
-# Outputs
-output "rds_endpoint" {
-  description = "RDS endpoint (DB_HOST)"
-  value       = aws_db_instance.mydb.address
-}
-
-output "rds_port" {
-  value = aws_db_instance.mydb.port
+  skip_final_snapshot     = true  # 삭제 시 스냅샷 안 만듦 (비용 발생 방지)
+  backup_retention_period  = 0     # 자동 백업 비활성화 (스냅샷 저장 공간 0원)
+  delete_automated_backups = true  # 삭제 시 백업도 즉시 삭제
 }
