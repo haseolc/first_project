@@ -7,7 +7,7 @@ data "aws_security_group" "web_sg" {
 }
 
 resource "aws_instance" "AWS_ec2_sg_7th_room" {
-  ami                         = data.aws_ami.amazon_linux_2023.id
+  ami                         = var.ami_id # data.aws_ami.amazon_linux_2023.id
   instance_type               = var.instance_type
   associate_public_ip_address = var.associate_public_ip
   key_name                    = var.key_pair_name
