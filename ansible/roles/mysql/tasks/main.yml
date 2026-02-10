@@ -1,11 +1,11 @@
-- name: Download MySQL 8.4 Community Release RPM
+- name: Download MySQL 8.0 Community Release RPM
   ansible.builtin.get_url:
-    url: https://dev.mysql.com/get/mysql84-community-release-el9-2.noarch.rpm
-    dest: /tmp/mysql84-community-release-el9-2.noarch.rpm
+    url: https://dev.mysql.com/get/mysql80-community-release-el9-3.noarch.rpm
+    dest: /tmp/mysql80-community-release-el9-3.noarch.rpm
 
 - name: Install MySQL Repository
   ansible.builtin.dnf:
-    name: /tmp/mysql84-community-release-el9-2.noarch.rpm
+    name: /tmp/mysql80-community-release-el9-3.noarch.rpm
     state: present
 
 - name: Import MySQL GPG Key
