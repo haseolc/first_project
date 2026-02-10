@@ -31,10 +31,14 @@ resource "aws_instance" "AWS_ec2_sg_7th_room" {
     }
   }
 
-  # MySQL 설치
+  # MySQL client 설치
   user_data = <<-EOF
               #!/bin/bash
-              sudo dnf install -y mysql
+              sudo dnf install -y wget
+              sudo wget https://dev.mysql.com/get/mysql80-community-release-el9-1.noarch.rpm
+              sudo dnf install -y mysql80-community-release-el9-1.noarch.rpm
+              sudo dnf update -y
+              sudo dnf install -y mysql-community-client
               EOF
 
   tags = {
@@ -43,4 +47,3 @@ resource "aws_instance" "AWS_ec2_sg_7th_room" {
     Project     = "infra-auto"
   }
 }
-
