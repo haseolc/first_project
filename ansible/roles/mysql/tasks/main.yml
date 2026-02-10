@@ -1,33 +1,16 @@
 ---
 # CLI 필요로 MySQL Server 설치 (Client만 설치 불가)
-- name: Download MySQL 8.0 Community Release RPM
-  ansible.builtin.get_url:
-    url: https://dev.mysql.com/get/mysql80-community-release-el9-1.noarch.rpm
-    dest: /tmp/mysql80-community-release-el9-1.noarch.rpm
-
-- name: Install MySQL repository RPM
+---
+# MySQL 서버 설치 (Amazon Linux 2023)
+- name: Enable MySQL 8.0 module
   ansible.builtin.dnf:
-    name: /tmp/mysql80-community-release-el9-1.noarch.rpm
-    state: present
-
-- name: Update DNF cache
-  ansible.builtin.dnf:
-    update_cache: yes
-
-- name: Import MySQL GPG key
-  ansible.builtin.rpm_key:
-    state: present
-    key: https://repo.mysql.com/RPM-GPG-KEY-mysql-2023
-
-- name: Install MySQL client
-  ansible.builtin.dnf:
-    name: mysql-community-client
+    name: "@mysql:8.0"
     state: present
     update_cache: yes
 
 - name: Install MySQL server
   ansible.builtin.dnf:
-    name: mysql-community-server
+    name: mysql-server
     state: present
     update_cache: yes
 
@@ -36,6 +19,7 @@
     name: mysqld
     state: started
     enabled: yes
+
 
 
 # mysql -h terraform-20260210071207430100000001.cl0aokksg3rp.ap-northeast-2.rds.amazonaws.com -u admin -p
