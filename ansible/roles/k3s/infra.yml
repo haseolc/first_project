@@ -7,7 +7,8 @@ metadata:
 type: Opaque
 data:
   DB_PASSWORD: YWRtaW4xMjM0IQ== # Base64
-
+  
+---
 # --- [Flask API Deployment] ---
 apiVersion: apps/v1
 kind: Deployment
@@ -42,6 +43,7 @@ spec:
               key: DB_PASSWORD # Secret data key
         - name: DB_NAME
           value: admin_db
+          
 ---
 # --- [API 내부 Service] ---
 apiVersion: v1
@@ -56,6 +58,7 @@ spec:
   - protocol: TCP
     port: 80
     targetPort: 5000
+    
 ---
 # --- [★ 핵심: 보안 통로 Ingress + WAF] ---
 apiVersion: networking.k8s.io/v1
@@ -81,5 +84,3 @@ spec:
             port:
 
               number: 80
-
-
