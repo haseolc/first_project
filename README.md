@@ -13,4 +13,5 @@
 
 </div>
 
-- [![Notion](https://img.shields.io/badge/-Notion-17191A?style=flat&logo=notion&logoColor=white&labelColor=17191A)](https://www.notion.so/troubleshooting-303cd1e77d15806f9024c4195471976c?source=copy_link) 클릭하여 트러블슈팅 기록 수시로 작성해 주세요.
+- [![Notion](https://img.shields.io/badge/-Notion-17191A?style=flat&logo=notion&logoColor=white&labelColor=17191A)](https://www.notion.so/troubleshooting-fed8a2d6b91883eead9081ae5d7ee963?source=copy_link) 클릭하여 트러블슈팅 기록 수시로 작성해 주세요.
+
