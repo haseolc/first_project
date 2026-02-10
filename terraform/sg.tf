@@ -21,12 +21,12 @@ resource "aws_security_group" "sg_7th_room" { # 그룹명: 7th-room-sg
   }
 
   tags = {
-    Name = "sg_7th_room"
+    Name = "sg_7th_room_id"
   }
 }
 
 # Web 서버 보안 그룹
-resource "aws_security_group" "web-sg" {     # 그룹명: web-sg
+resource "aws_security_group" "web_sg_7th_room" {     # 그룹명: web_sg_7th_room
     vpc_id = data.aws_vpc.default.id  # 기본 VPC에 생성
 
   # K3s API 서버 (관리용)
@@ -88,6 +88,7 @@ resource "aws_security_group" "web-sg" {     # 그룹명: web-sg
   }
 
   tags = {
-    Name = "web-sg"
+    Name = "web_sg_7th_room_id"
   }
 }
+
