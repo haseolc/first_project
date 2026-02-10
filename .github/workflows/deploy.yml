@@ -44,7 +44,7 @@ jobs:
         id: get-ip
         run: |
          cd terraform
-           # IP를 가져와서 제대로 출력되는지 로그로 확인
+          # IP를 가져와서 제대로 출력되는지 로그로 확인
           TEMP_IP=$(terraform output -raw room7_public_ip)
           echo "Current IP: $TEMP_IP"
           # $GITHUB_OUTPUT에 저장
