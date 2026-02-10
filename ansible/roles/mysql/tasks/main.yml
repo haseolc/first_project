@@ -1,11 +1,12 @@
+---
 - name: Update DNF cache
   ansible.builtin.dnf:
-  update_cache: yes
+    update_cache: yes
 
 - name: Install MySQL client
   ansible.builtin.dnf:
-  name: mysql
-  state: present
+    name: mysql
+    state: present
 
 # sudo dnf update -y
 # sudo dnf install -y mysql
