@@ -10,7 +10,9 @@
     - k3s
     - helm
     - nginx_waf
+    - mysql
     - prometheus
     - grafana
 #    - myapi           # roles/myapi/tasks/main.yml 에서 myapi 배포 수행
+
 
