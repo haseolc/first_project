@@ -1,6 +1,7 @@
 from flask import Flask, request, render_template, redirect
 import mysql.connector
 import os
+import hashlib
 
 app = Flask(__name__)
 
@@ -30,13 +31,13 @@ def login():
     target_url = f"http://{host_ip}:{GRAFANA_PORT}"
     dashboard_url = f"{target_url}/dashboards"
 
-
-
+    hashed_pw = hashlib.sha256(admin_pw.encode()).hexdigest()
+    
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute(
         "SELECT * FROM admins WHERE admin_id=%s AND admin_pw=%s",
-        (admin_id, admin_pw)
+        (admin_id, hashed_pw)
     )
     admin = cursor.fetchone()
     cursor.close()
@@ -57,6 +58,3 @@ def login():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
-
-
-
