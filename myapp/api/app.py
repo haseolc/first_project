@@ -43,10 +43,15 @@ def login():
     conn.close()
 
     if admin:
-        # return render_template("dashboard.html", admin_id=admin_id)
-        return redirect(target_url)
-        #현재는 target_url로 리다이렉트 = 그라파나 홈으로 이동
-        #대시보드로 바로 이동하려면 dashboard_url로 리다이렉트
+            # 입력받은 비밀번호 해싱
+            input_pw_hash = hashlib.sha256(admin_pw.encode()).hexdigest()
+            
+            # DB의 해시값과 비교
+            if admin['admin_pw'] == input_pw_hash:
+                  return redirect(target_url)
+                #현재는 target_url로 리다이렉트 = 그라파나 홈으로 이동
+                #대시보드로 바로 이동하려면 dashboard_url로 리다이렉트
+        
     else:
         return "<h1>로그인 실패</h1><a href='/'>돌아가기</a>"
 
