@@ -34,6 +34,12 @@ variable "key_pair_name" {
   default     = "infra-dev-key"
 }
 
+variable "associate_public_ip" {
+  description = "Whether to associate a public IPv4 address to the instance in the selected subnet."
+  type        = bool
+  default     = true
+}
+
 variable "ssh_sg_name" {
   description = "Existing Security Group name for SSH access."
   type        = string
