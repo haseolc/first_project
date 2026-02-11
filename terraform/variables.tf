@@ -28,12 +28,6 @@ variable "ami_id" {
   default     = "ami-0dec6548c7c0d0a96"
 }
 
-variable "associate_public_ip" {
-  description = "Whether to associate a public IPv4 address to the instance in the selected subnet."
-  type        = bool
-  default     = true
-}
-
 variable "key_pair_name" {
   description = "Existing EC2 Key Pair name in the target region (must already exist in AWS)."
   type        = string
