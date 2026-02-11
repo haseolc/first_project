@@ -7,6 +7,11 @@ variable "db_password" {
   sensitive = true
 }
 
+variable "db_user" {
+  type    = string
+  default = "admin"
+}
+
 resource "kubernetes_secret" "db_secret" {
   metadata {
     name      = "db-secret"
@@ -15,7 +20,7 @@ resource "kubernetes_secret" "db_secret" {
 
   data = {
     DB_HOST     = data.aws_db_instance.rds.address
-    DB_USER     = data.aws_db_instance.rds.username
+    DB_USER     = var.db_user
     DB_PASSWORD = var.db_password
     DB_NAME     = data.aws_db_instance.rds.db_name
   }
