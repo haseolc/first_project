@@ -47,42 +47,42 @@
   ansible.builtin.pause:
     seconds: 40
 
-# # 5. 대시보드 JSON 파일을 서버로 복사
-# - name: "대시보드 JSON 파일들을 서버로 전송"
-#   ansible.builtin.copy:
-#     # 현재 tasks 폴더 기준이므로 한 단계 위(..)의 templates 폴더를 가리킵니다.
-#     src: "../templates/{{ item.name }}.json" 
-#     dest: "/tmp/{{ item.name }}.json"
-#     owner: ec2-user
-#     group: ec2-user
-#     mode: '0644'
-#   loop:
-#     - { name: 'waf-dashboard' }
-#     - { name: 'node-dashboard' }
-#     - { name: 'k3s-dashboard' }
+# 5. 대시보드 JSON 파일을 서버로 복사 (가장 확실한 경로 지정 방식)
+- name: "대시보드 JSON 파일들을 서버로 전송"
+  ansible.builtin.copy:
+    # role_path를 쓰면 앤서블이 무조건 현재 role 폴더(monitoring)에서 시작합니다.
+    src: "{{ role_path }}/templates/{{ item.name }}.json"
+    dest: "/tmp/{{ item.name }}.json"
+    owner: ec2-user
+    group: ec2-user
+    mode: '0644'
+  loop:
+    - { name: 'waf-dashboard' }
+    - { name: 'node-dashboard' }
+    - { name: 'k3s-dashboard' }
 
-# # 6. 복사된 파일을 이용해 ConfigMap 생성 및 배포
-# - name: "멀티 대시보드 배포 (Nginx/Node/Cluster)"
-#   ansible.builtin.shell: |
-#     kubectl create configmap dashboard-{{ item.id }} \
-#       --from-file={{ item.name }}.json=/tmp/{{ item.name }}.json \
-#       -n monitoring --dry-run=client -o yaml | \
-#     kubectl label -f - grafana_dashboard="1" --local -o yaml | \
-#     kubectl apply -f -
-#   loop:
-#     - { id: '9614', name: 'waf-dashboard' }
-#     - { id: '1860', name: 'node-dashboard' }
-#     - { id: '10856', name: 'k3s-dashboard' }
-#   environment:
-#     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
-#   changed_when: false
+# 6. 복사된 파일을 이용해 ConfigMap 생성 및 배포 (Server-Side Apply 적용)
+- name: "멀티 대시보드 배포 (Nginx/Node/Cluster)"
+  ansible.builtin.shell: |
+    /usr/local/bin/kubectl create configmap dashboard-{{ item.id }} \
+      --from-file={{ item.name }}.json=/tmp/{{ item.name }}.json \
+      -n monitoring --dry-run=client -o yaml | \
+    /usr/local/bin/kubectl label -f - grafana_dashboard="1" --local -o yaml | \
+    /usr/local/bin/kubectl apply --server-side --force-conflicts -f -
+  loop:
+    - { id: '9614', name: 'waf-dashboard' }
+    - { id: '1860', name: 'node-dashboard' }
+    - { id: '10856', name: 'k3s-dashboard' }
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  changed_when: false
 
-# # 7. 사용이 끝난 임시 파일 삭제 (보안 및 정리)
-# - name: "임시 JSON 파일 삭제"
-#   ansible.builtin.file:
-#     path: "/tmp/{{ item.name }}.json"
-#     state: absent
-#   loop:
-#     - { name: 'waf-dashboard' }
-#     - { name: 'node-dashboard' }
-    # - { name: 'k3s-dashboard' }
+# 7. 사용이 끝난 임시 파일 삭제 (보안 및 정리)
+- name: "임시 JSON 파일 삭제"
+  ansible.builtin.file:
+    path: "/tmp/{{ item.name }}.json"
+    state: absent
+  loop:
+    - { name: 'waf-dashboard' }
+    - { name: 'node-dashboard' }
+    - { name: 'k3s-dashboard' }
