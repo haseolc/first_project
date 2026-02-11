@@ -47,11 +47,24 @@
   ansible.builtin.pause:
     seconds: 40
 
-# 5. 모니터링 대시보드 추가
+# 5. 대시보드 JSON 파일을 서버로 복사
+- name: "대시보드 JSON 파일들을 서버로 전송"
+  ansible.builtin.copy:
+    src: "{{ item.name }}.json" # 앤서블은 role의 templates/ 폴더에서 자동으로 찾습니다.
+    dest: "/tmp/{{ item.name }}.json"
+    owner: ec2-user
+    group: ec2-user
+    mode: '0644'
+  loop:
+    - { name: 'waf-dashboard' }
+    - { name: 'node-dashboard' }
+    - { name: 'k3s-dashboard' }
+
+# 6. 복사된 파일을 이용해 ConfigMap 생성 및 배포
 - name: "멀티 대시보드 배포 (Nginx/Node/Cluster)"
   ansible.builtin.shell: |
     kubectl create configmap dashboard-{{ item.id }} \
-      --from-file={{ item.name }}.json=roles/monitoring/templates/{{ item.name }}.json \
+      --from-file={{ item.name }}.json=/tmp/{{ item.name }}.json \
       -n monitoring --dry-run=client -o yaml | \
     kubectl label -f - grafana_dashboard="1" --local -o yaml | \
     kubectl apply -f -
@@ -59,4 +72,16 @@
     - { id: '9614', name: 'waf-dashboard' }
     - { id: '1860', name: 'node-dashboard' }
     - { id: '10856', name: 'k3s-dashboard' }
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
   changed_when: false
+
+# 7. 사용이 끝난 임시 파일 삭제 (보안 및 정리)
+- name: "임시 JSON 파일 삭제"
+  ansible.builtin.file:
+    path: "/tmp/{{ item.name }}.json"
+    state: absent
+  loop:
+    - { name: 'waf-dashboard' }
+    - { name: 'node-dashboard' }
+    - { name: 'k3s-dashboard' }
