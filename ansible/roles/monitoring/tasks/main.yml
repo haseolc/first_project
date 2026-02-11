@@ -49,7 +49,7 @@
 
 # 5. 대시보드 JSON 파일을 서버로 복사
 - name: "대시보드 JSON 파일들을 서버로 전송"
-  ansible.builtin.copy:
+  ansible.builtin.template:
     src: "{{ item.name }}.json" # 앤서블은 role의 templates/ 폴더에서 자동으로 찾습니다.
     dest: "/tmp/{{ item.name }}.json"
     owner: ec2-user
