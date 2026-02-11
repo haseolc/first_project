@@ -45,4 +45,18 @@
 # 4. 설치 후 Pod 안정화 대기
 - name: "모니터링 Pod 부팅 대기 (60초)"
   ansible.builtin.pause:
-    seconds: 60
+    seconds: 40
+
+# 5. 모니터링 대시보드 추가
+- name: "멀티 대시보드 배포 (Nginx/Node/Cluster)"
+  ansible.builtin.shell: |
+    kubectl create configmap dashboard-{{ item.id }} \
+      --from-file={{ item.name }}.json=roles/monitoring/templates/{{ item.name }}.json \
+      -n monitoring --dry-run=client -o yaml | \
+    kubectl label -f - grafana_dashboard="1" --local -o yaml | \
+    kubectl apply -f -
+  loop:
+    - { id: '9614', name: 'waf-dashboard' }
+    - { id: '1860', name: 'node-dashboard' }
+    - { id: '10856', name: 'k3s-dashboard' }
+  changed_when: false

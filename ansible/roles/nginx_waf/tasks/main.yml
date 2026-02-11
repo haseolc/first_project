@@ -14,6 +14,15 @@
         dnsPolicy: ClusterFirstWithHostNet
         admissionWebhooks: { enabled: false }
         service: { type: ClusterIP }
+         # --- [추가된 Metrics 설정] ---
+        metrics:
+          enabled: true
+          serviceMonitor:
+            enabled: true
+            additionalLabels:
+              # 앤서블 monitoring 역할에서 설치한 헬름 릴리즈 이름(prometheus)과 일치해야 함
+              release: prometheus 
+        # ----------------------------
         # ★ [핵심 수정] 이 컨트롤러를 기본 인그레스 관리자로 지정
         ingressClassResource:
           name: nginx
