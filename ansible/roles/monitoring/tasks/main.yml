@@ -1,0 +1,48 @@
+---
+# 1. 네임스페이스 생성
+- name: "모니터링(monitoring) 네임스페이스 생성"
+  ansible.builtin.shell: |
+    /usr/local/bin/kubectl create namespace monitoring || true
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  register: ns_create
+  changed_when: "'created' in ns_create.stdout"
+
+# 2. Helm 저장소 설정
+- name: "Prometheus Community 저장소 추가 및 업데이트"
+  ansible.builtin.shell: |
+    /usr/local/bin/helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+    /usr/local/bin/helm repo update
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  changed_when: true
+
+# 3. 경량화 및 최적화된 모니터링 스택 설치
+# 주석은 명령어(shell) 블록 밖에 작성해야 에러가 나지 않습니다.
+#      --set grafana.adminPassword=admin123 \ 은 실질적으론 작동 안함, root 계정 용
+- name: "경량화된 kube-prometheus-stack 설치"
+  ansible.builtin.shell: |
+    /usr/local/bin/helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
+      --namespace monitoring \
+      --set grafana.adminPassword=admin123 \
+      --set grafana.service.type=NodePort \
+      --set grafana.service.nodePort=30000 \
+      --set "grafana.grafana\.ini.auth\.anonymous.enabled=true" \
+      --set "grafana.grafana\.ini.auth\.anonymous.org_name=Main Org." \
+      --set "grafana.grafana\.ini.auth\.anonymous.org_role=Admin" \
+      --set prometheus.prometheusSpec.retention=1d \
+      --set prometheus.prometheusSpec.resources.limits.memory=512Mi \
+      --set prometheus.prometheusSpec.resources.requests.memory=256Mi \
+      --set prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.accessModes={ReadWriteOnce} \
+      --set prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage=5Gi \
+      --set alertmanager.enabled=false \
+      --set prometheus-node-exporter.resources.limits.memory=50Mi \
+      --set kube-state-metrics.resources.limits.memory=100Mi
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  changed_when: true
+
+# 4. 설치 후 Pod 안정화 대기
+- name: "모니터링 Pod 부팅 대기 (60초)"
+  ansible.builtin.pause:
+    seconds: 60

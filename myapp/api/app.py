@@ -4,6 +4,9 @@ import os
 
 app = Flask(__name__)
 
+# 그라파나 포트 설정
+GRAFANA_PORT = "30000"
+
 def get_db_connection():
     return mysql.connector.connect(
         host=os.environ.get("DB_HOST", "terraform-20260210194948525200000001.cl0aokksg3rp.ap-northeast-2.rds.amazonaws.com"), # <---------- RDS 엔드포인트 
@@ -22,6 +25,13 @@ def login():
     admin_id = request.form.get("admin_id")
     admin_pw = request.form.get("password")
 
+    # 접속한 서버의 IP를 자동으로 가져오기
+    host_ip = request.host.split(':')[0]
+    target_url = f"http://{host_ip}:{GRAFANA_PORT}"
+    dashboard_url = f"{target_url}/dashboards"
+
+
+
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute(
@@ -33,7 +43,10 @@ def login():
     conn.close()
 
     if admin:
-        return render_template("dashboard.html", admin_id=admin_id)
+        # return render_template("dashboard.html", admin_id=admin_id)
+        return redirect(target_url)
+        #현재는 target_url로 리다이렉트 = 그라파나 홈으로 이동
+        #대시보드로 바로 이동하려면 dashboard_url로 리다이렉트
     else:
         return "<h1>로그인 실패</h1><a href='/'>돌아가기</a>"
 
