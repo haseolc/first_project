@@ -1,4 +1,4 @@
-variable "aws_region" {
+variable "region" {
   description = "AWS region to deploy resources into."
   type        = string
   default     = "ap-northeast-2"
@@ -56,4 +56,10 @@ variable "environment" {
   description = "Environment tag (e.g., dev, prod)."
   type        = string
   default     = "dev"
+}
+
+variable "project" {
+  description = "프로젝트"
+  type        = string
+  default     = "infra-auto"
 }
