@@ -1,14 +1,14 @@
 # RDS 비밀번호용 K3s Secret 생성
-apiVersion: v1
-kind: Secret
-metadata:
-  name: db-secret
-  namespace: default
-type: Opaque
-data:
-  DB_PASSWORD: YWRtaW4xMjM0IQ== # Base64
+#apiVersion: v1
+#kind: Secret
+#metadata:
+#  name: db-secret
+#  namespace: default
+#type: Opaque
+#data:
+#  DB_PASSWORD: YWRtaW4xMjM0IQ== # Base64
   
----
+#---
 # --- [Flask API Deployment] ---
 apiVersion: apps/v1
 kind: Deployment
@@ -33,17 +33,31 @@ spec:
         - containerPort: 5000
         env: # 환경변수
         - name: DB_HOST
-          value: terraform-20260211044941925200000001.cl0aokksg3rp.ap-northeast-2.rds.amazonaws.com # <---------- RDS 엔드포인트
+          #value: terraform-20260211044941925200000001.cl0aokksg3rp.ap-northeast-2.rds.amazonaws.com # <---------- RDS 엔드포인트
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: DB_HOST
+              
         - name: DB_USER
-          value: admin
+          #value: admin
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: DB_USER
+              
         - name: DB_PASSWORD # app.py에서 참조
           valueFrom:
             secretKeyRef:
               name: db-secret # Secret 이름
               key: DB_PASSWORD # Secret data key
+              
         - name: DB_NAME
-          value: admin_db
-          
+          #value: admin_db
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: DB_NAME
 ---
 # --- [API 내부 Service] ---
 apiVersion: v1
@@ -84,4 +98,5 @@ spec:
             port:
 
               number: 80
+
 
