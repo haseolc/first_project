@@ -9,8 +9,9 @@
     - common
     - k3s
     - helm
-    - nginx_waf
     - monitoring
+    - nginx_waf
+    
 
 
 
