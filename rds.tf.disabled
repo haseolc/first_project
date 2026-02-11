@@ -5,8 +5,7 @@ provider "aws" {
 variable "db_password" {
   description = "RDS root password"
   type        = string
-  # 보안을 위해 default는 비워두고 GitHub Secrets나 실행 시 입력 권장
-  default     = "admin1234!" 
+  sensitive   = true # 민감 정보
 }
 
 # 기존(Default) VPC 정보 조회
@@ -98,3 +97,12 @@ resource "aws_db_instance" "db" {
 output "rds_endpoint" {
   value = aws_db_instance.db.address
 }
+
+# ---------- 생성 방법 (삭제 예정) ----------
+# [로컬 PC]
+# export TF_VAR_db_password="admin1234!"
+# terraform init
+# terraform apply
+# [PowerShell]
+# $env:TF_VAR_db_password="admin1234!"
+# terraform apply
