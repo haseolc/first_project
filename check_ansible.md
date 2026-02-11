@@ -51,7 +51,7 @@ kubectl exec -it -n ingress-nginx  $(kubectl get pods -n ingress-nginx -l app.ku
 #### ① 정상 접속 테스트
 ```bash
 # EC2의 퍼블릭 IP로 접속 (200 OK가 나와야 함)
-curl -I http://x.x.x.x
+curl -I http://3.38.190.34
 curl -I http://x.x.x.x:80 (혹은 다른 포트)
 ```
 
@@ -59,7 +59,7 @@ curl -I http://x.x.x.x:80 (혹은 다른 포트)
 
 ```bash
 # 고의적인 SQL 인젝션 쿼리 전송
-curl -I "http://x.x.x.x/?id='OR+1=1--"
+curl -I "http://3.38.190.34/?id='OR+1=1--"
 ```
 *   **성공 결과:** `HTTP/1.1 403 Forbidden`이 출력되어야 합니다.
 *   **실패 결과:** `HTTP/1.1 200 OK`나 `404 Not Found`가 나오면 WAF가 작동하지 않는 것입니다.

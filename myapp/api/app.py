@@ -53,7 +53,7 @@ def login():
                 #대시보드로 바로 이동하려면 dashboard_url로 리다이렉트
 
     if admin:
-        return redirect(target_url) 
+        return redirect(dashboard_url) 
     else:
         return "<h1>로그인 실패</h1><a href='/'>돌아가기</a>"
 
