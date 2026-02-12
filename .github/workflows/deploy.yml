@@ -69,6 +69,14 @@ jobs:
           echo "Current IP: $TEMP_IP"
           # $GITHUB_OUTPUT에 저장
           echo "EC2_PUBLIC_IP=$TEMP_IP" >> $GITHUB_OUTPUT
+
+      # RDS endpoint 가져옴 **********
+      - name: Get RDS Endpoint
+        id: get-rds
+        working-directory: terraform
+        run: |
+          echo "RDS_ENDPOINT=$(terraform output -raw rds_endpoint)" >> $GITHUB_ENV
+          
   deploy:
     needs: [terraform, build-and-push]
     runs-on: ubuntu-latest
@@ -110,6 +118,11 @@ jobs:
           # Install collections directly into the ansible directory
           ansible-galaxy collection install community.kubernetes -p ./ansible/collections
 
+      # Deployment YAML에 RDS endpoint 치환 **********
+      - name: Replace RDS endpoint in Deployment YAML
+        run: |
+          sed -i "s|__RDS_ENDPOINT__|${{ env.RDS_ENDPOINT }}|g" k8s/api-deployment.yaml
+          
       # 3. 앤서블 실행
       - name: Ansible Running Start
         run: |
