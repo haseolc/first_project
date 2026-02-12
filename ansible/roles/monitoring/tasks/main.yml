@@ -38,6 +38,9 @@
       --set alertmanager.enabled=false \
       --set prometheus-node-exporter.resources.limits.memory=50Mi \
       --set kube-state-metrics.resources.limits.memory=100Mi
+      --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false \
+      --set prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues=false
+
   environment:
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
   changed_when: true
@@ -60,6 +63,7 @@
     - { name: 'waf-dashboard' }
     - { name: 'node-dashboard' }
     - { name: 'k3s-dashboard' }
+    - { name: 'waf-dashboard2' }
 
 # 6. 복사된 파일을 이용해 ConfigMap 생성 및 배포 (Server-Side Apply 적용)
 - name: "멀티 대시보드 배포 (Nginx/Node/Cluster)"
@@ -73,6 +77,8 @@
     - { id: '9614', name: 'waf-dashboard' }
     - { id: '1860', name: 'node-dashboard' }
     - { id: '10856', name: 'k3s-dashboard' }
+    - { id: '14314', name: 'waf-dashboard2' }
+
   environment:
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
   changed_when: false
@@ -86,3 +92,4 @@
     - { name: 'waf-dashboard' }
     - { name: 'node-dashboard' }
     - { name: 'k3s-dashboard' }
+    - { name: 'waf-dashboard2' }
