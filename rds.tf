@@ -61,7 +61,7 @@ resource "aws_security_group" "rds_sg" {
   }
 
   tags = {
-    Name = "rds_sg_7th_room"
+    Name = "rds-sg-7th-room"
   }
 }
 
