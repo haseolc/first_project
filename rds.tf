@@ -92,7 +92,7 @@ resource "aws_db_instance" "db_7th_room" {
   publicly_accessible     = false
   backup_window = "18:00-19:00"  # KST 기준 03:00~04:00
   skip_final_snapshot     = false
-  backup_retention_period  = 7
+  backup_retention_period  = 1
   delete_automated_backups = true # 삭제 시 백업도 즉시 삭제
 }
 
