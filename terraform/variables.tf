@@ -4,18 +4,6 @@ variable "region" {
   default     = "ap-northeast-2"
 }
 
-#variable "ami_name_pattern" { # AMI 오류나서 주석처리 해놓았습니다.
-#  description = "AMI name pattern used to pick the most recent Amazon Linux 2023 x86_64 image."
-#  type        = string
-#  default     = "al2023-ami-*-x86_64"
-#}
-
-# variable "ami_owners" {
-#  description = "List of AMI owner accounts. Use ['amazon'] to restrict to official Amazon AMIs."
-#  type        = list(string)
-#  default     = ["amazon"]
-#}
-
 variable "instance_type" {
   description = "EC2 instance type."
   type        = string
@@ -43,19 +31,19 @@ variable "associate_public_ip" {
 variable "ssh_sg_name" {
   description = "Existing Security Group name for SSH access."
   type        = string
-  default     = "ssh_sg_7th_room"
+  default     = "ssh-sg-7th-room"
 }
 
 variable "web_sg_name" {
   description = "Existing Security Group name for web/cluster traffic."
   type        = string
-  default     = "web_sg_7th_room"
+  default     = "web-sg-7th-room"
 }
 
 variable "instance_name" {
   description = "Name tag for the EC2 instance."
   type        = string
-  default     = "AWS_ec2_sg_7th_room"
+  default     = "ec2-7th-room"
 }
 
 variable "environment" {
