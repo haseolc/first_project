@@ -73,6 +73,7 @@ resource "aws_db_subnet_group" "rds_subnet_group" {
 
 # RDS 인스턴스 설정 (프리티어 & 비용 방어 최적화)
 resource "aws_db_instance" "db" {
+  identifier             = "7th_room_rds"
   allocated_storage      = 20
   storage_type           = "gp2"
   engine                 = "mysql"
