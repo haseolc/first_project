@@ -6,7 +6,7 @@ data "aws_security_group" "web_sg" {
   name = var.web_sg_name
 }
 
-resource "aws_instance" "AWS_ec2_sg_7th_room" {
+resource "aws_instance" "ec2_7th_room" {
   ami                         = var.ami_id # data.aws_ami.amazon_linux_2023.id
   instance_type               = var.instance_type
   key_name                    = var.key_pair_name
@@ -46,6 +46,7 @@ resource "aws_instance" "AWS_ec2_sg_7th_room" {
     Environment = var.environment
   }
 }
+
 
 
 
