@@ -25,7 +25,7 @@ resource "aws_security_group" "ssh_sg" {
   }
 
   tags = {
-    Name = "ssh_sg_7th_room"
+    Name = "ssh-sg-7th-room"
   }
 }
 
@@ -94,7 +94,7 @@ resource "aws_security_group" "web_sg" {
   }
 
   tags = {
-    Name = "web_sg_7th_room"
+    Name = "web-sg-7th-room"
   }
 }
 
