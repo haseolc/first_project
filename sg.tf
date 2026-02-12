@@ -78,21 +78,21 @@ resource "aws_security_group" "web_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   #아래 두 포트는 없어도 됩니다
-  ingress {
-    description = "HTTP NodePort"
-    from_port   = 30080
-    to_port     = 30080
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  #ingress {
+  #  description = "HTTP NodePort"
+  #  from_port   = 30080
+  #  to_port     = 30080
+  #  protocol    = "tcp"
+  #  cidr_blocks = ["0.0.0.0/0"]
+  #}
 
-  ingress {
-    description = "HTTPS NodePort"
-    from_port   = 30443
-    to_port     = 30443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  #ingress {
+  #  description = "HTTPS NodePort"
+  #  from_port   = 30443
+  #  to_port     = 30443
+  #  protocol    = "tcp"
+  #  cidr_blocks = ["0.0.0.0/0"]
+  #}
 
   egress {
     from_port   = 0
