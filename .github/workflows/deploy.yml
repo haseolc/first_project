@@ -37,6 +37,8 @@ jobs:
     
     outputs:
       EC2_PUBLIC_IP: ${{ steps.get-ip.outputs.EC2_PUBLIC_IP }}
+      RDS_ENDPOINT: ${{ steps.get-rds.outputs.RDS_ENDPOINT }} # 추가 **********
+
     steps:
       - uses: actions/checkout@v4
    
@@ -75,7 +77,8 @@ jobs:
         id: get-rds
         working-directory: terraform
         run: |
-          echo "RDS_ENDPOINT=$(terraform output -raw rds_endpoint)" >> $GITHUB_ENV
+          TEMP_RDS=$(terraform output -raw rds_endpoint)
+          echo "RDS_ENDPOINT=$TEMP_RDS" >> $GITHUB_OUTPUT
           
   deploy:
     needs: [terraform, build-and-push]
@@ -121,7 +124,7 @@ jobs:
       # Deployment YAML에 RDS endpoint 치환 **********
       - name: Replace RDS endpoint in Deployment YAML
         run: |
-          sed -i "s|__RDS_ENDPOINT__|${{ env.RDS_ENDPOINT }}|g" ansible/roles/k3s/infra.yml
+          sed -i "s|__RDS_ENDPOINT__|${{ needs.terraform.outputs.RDS_ENDPOINT }}|g" ansible/roles/k3s/infra.yml
           
       # 3. 앤서블 실행
       - name: Ansible Running Start
