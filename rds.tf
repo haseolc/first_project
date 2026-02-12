@@ -90,9 +90,9 @@ resource "aws_db_instance" "db_7th_room" {
   multi_az                = false
   availability_zone       = "ap-northeast-2a"
   publicly_accessible     = false
-  skip_final_snapshot     = false  # 삭제 시 스냅샷 안 만듦 (비용 발생 방지)
-  backup_retention_period  = 0     # 자동 백업 비활성화 (스냅샷 저장 공간 0원)
-  delete_automated_backups = true  # 삭제 시 백업도 즉시 삭제
+  skip_final_snapshot     = false
+  backup_retention_period  = 7
+  delete_automated_backups = true # 삭제 시 백업도 즉시 삭제
 }
 
 output "rds_endpoint" {
