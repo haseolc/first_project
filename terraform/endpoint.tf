@@ -3,5 +3,5 @@ data "aws_db_instance" "endpoint" {
 }
 
 output "endpoint" {
-  value = data.aws_db_instance.endpoint.endpoint
+  value = split(":", data.aws_db_instance.endpoint.endpoint)[0]
 }
