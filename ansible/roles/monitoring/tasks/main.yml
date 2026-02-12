@@ -45,10 +45,10 @@
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
   changed_when: true
 
-# # 4. 설치 후 Pod 안정화 대기
-# - name: "모니터링 Pod 부팅 대기 (60초)"
-#   ansible.builtin.pause:
-#     seconds: 40
+# 4. 설치 후 Pod 안정화 대기
+- name: "모니터링 Pod 부팅 대기 (60초)"
+  ansible.builtin.pause:
+    seconds: 40
 
 # 5. 대시보드 JSON 파일을 서버로 복사 (가장 확실한 경로 지정 방식)
 - name: "대시보드 JSON 파일들을 서버로 전송"
