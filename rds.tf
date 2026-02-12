@@ -72,7 +72,7 @@ resource "aws_db_subnet_group" "rds_subnet_group" {
 }
 
 # RDS 인스턴스 설정 (프리티어 & 비용 방어 최적화)
-resource "aws_db_instance" "db" {
+resource "aws_db_instance" "db_7th_room" {
   identifier             = "rds-7th-room"
   allocated_storage      = 20
   storage_type           = "gp2"
@@ -96,7 +96,7 @@ resource "aws_db_instance" "db" {
 }
 
 output "rds_endpoint" {
-  value = aws_db_instance.db.address
+  value = aws_db_instance.db_7th_room.address
 }
 
 # ---------- 생성 방법 (삭제 예정) ----------
