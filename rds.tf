@@ -90,6 +90,7 @@ resource "aws_db_instance" "db_7th_room" {
   multi_az                = false
   availability_zone       = "ap-northeast-2a"
   publicly_accessible     = false
+  preferred_backup_window = "18:00-19:00"  # KST 기준 03:00~04:00
   skip_final_snapshot     = false
   backup_retention_period  = 7
   delete_automated_backups = true # 삭제 시 백업도 즉시 삭제
