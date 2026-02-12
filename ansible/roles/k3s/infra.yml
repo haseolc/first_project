@@ -33,7 +33,7 @@ spec:
         - containerPort: 5000
         env: # 환경변수
         - name: DB_HOST
-          value: rds-7th-room.cl0aokksg3rp.ap-northeast-2.rds.amazonaws.com # <---------- RDS 엔드포인트
+          value: "__RDS_ENDPOINT__" #rds-7th-room.cl0aokksg3rp.ap-northeast-2.rds.amazonaws.com # <---------- RDS 엔드포인트
               
         - name: DB_USER
           value: admin
@@ -87,6 +87,7 @@ spec:
             port:
 
               number: 80
+
 
 
 
