@@ -1,3 +1,5 @@
+# 📌서버 배포 시 반드시 ansible/roles/k3s/infra.yml RDS 엔드포인트 확인
+
 # 클라우드 자동화 및 백업과 보안 구축
 
 <div align="center">
@@ -26,3 +28,4 @@ ssh -i <KEY PAIR PATH> ec2-user@<PUBLIC IP>
 ```bash
 mysql -h <RDS ENDPOINT> -u <USER> -p
 ```
+
