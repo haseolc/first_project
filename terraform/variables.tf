@@ -31,13 +31,13 @@ variable "associate_public_ip" {
 variable "ssh_sg_name" {
   description = "Existing Security Group name for SSH access."
   type        = string
-  default     = "ssh-sg-7th-room"
+  default     = "ssh_sg_7th_room"
 }
 
 variable "web_sg_name" {
   description = "Existing Security Group name for web/cluster traffic."
   type        = string
-  default     = "web-sg-7th-room"
+  default     = "web_sg_7th_room"
 }
 
 variable "instance_name" {
