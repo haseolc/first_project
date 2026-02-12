@@ -77,7 +77,7 @@ jobs:
         id: get-rds
         working-directory: terraform
         run: |
-          TEMP_RDS=$(terraform output -raw rds_endpoint)
+          TEMP_RDS=$(terraform output -raw endpoint)
           echo "RDS_ENDPOINT=$TEMP_RDS" >> $GITHUB_OUTPUT
           
   deploy:
