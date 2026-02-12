@@ -121,7 +121,7 @@ jobs:
       # Deployment YAML에 RDS endpoint 치환 **********
       - name: Replace RDS endpoint in Deployment YAML
         run: |
-          sed -i "s|__RDS_ENDPOINT__|${{ env.RDS_ENDPOINT }}|g" k8s/api-deployment.yaml
+          sed -i "s|__RDS_ENDPOINT__|${{ env.RDS_ENDPOINT }}|g" ansible/roles/k3s/infra.yml
           
       # 3. 앤서블 실행
       - name: Ansible Running Start
