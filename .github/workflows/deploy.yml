@@ -1,15 +1,10 @@
 name: 7th-room-project-deploy
 
 on:
-  # push:
-  #   branches: 
-  #     - main
-  #     - sh
-  #     - Jeong
-  workflow_dispatch: # 수동 실행 버튼 유지
+  workflow_dispatch: # 수동 실행 버튼
 
 jobs:
-   #도커 빌드 및 푸시
+  #도커 빌드 및 푸시
   build-and-push:
     runs-on: ubuntu-latest
     steps:
@@ -29,15 +24,15 @@ jobs:
           context: ./myapp/api
           push: true
           # 이미지 이름 
-          tags: ${{ secrets.DOCKER_USERNAME }}/myapi:latest # /docker_test:latest 이거 뭐야 증말
-          #오류 시 여기 수정 /myapi:latest
+          tags: ${{ secrets.DOCKER_USERNAME }}/myapi:latest
+
   terraform:
     needs: [build-and-push]
     runs-on: ubuntu-latest
     
     outputs:
       EC2_PUBLIC_IP: ${{ steps.get-ip.outputs.EC2_PUBLIC_IP }}
-      RDS_ENDPOINT: ${{ steps.get-rds.outputs.RDS_ENDPOINT }} # 추가 **********
+      RDS_ENDPOINT: ${{ steps.get-rds.outputs.RDS_ENDPOINT }}
 
     steps:
       - uses: actions/checkout@v4
@@ -72,7 +67,7 @@ jobs:
           # $GITHUB_OUTPUT에 저장
           echo "EC2_PUBLIC_IP=$TEMP_IP" >> $GITHUB_OUTPUT
 
-      # RDS endpoint 가져옴 **********
+      # RDS endpoint 가져옴
       - name: Get RDS Endpoint
         id: get-rds
         working-directory: terraform
@@ -89,7 +84,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         
-      # 1. SSH 키 설정 (절대 경로 및 멀티라인 처리)
+      # SSH 키 설정 (절대 경로 및 멀티라인 처리)
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
@@ -121,15 +116,28 @@ jobs:
           # Install collections directly into the ansible directory
           ansible-galaxy collection install community.kubernetes -p ./ansible/collections
 
-      # Deployment YAML에 RDS endpoint 치환 **********
+      # Deployment YAML에 RDS endpoint 치환
       - name: Replace RDS endpoint in Deployment YAML
         run: |
           sed -i "s|__RDS_ENDPOINT__|${{ needs.terraform.outputs.RDS_ENDPOINT }}|g" ansible/roles/k3s/infra.yml
+
+      # EC2에서 RDS에 접속해서 init.sql 실행
+      - name: Upload init.sql and initialize RDS
+        run: |
+          TARGET_IP=${{ needs.terraform.outputs.EC2_PUBLIC_IP }}
+          RDS_ENDPOINT=${{ needs.terraform.outputs.RDS_ENDPOINT }}
+          DB_USER=admin
+          DB_PASS=${{ secrets.DB_PASSWORD }}
+
+          # init.sql을 EC2에 올리기
+          scp -i /home/runner/.ssh/id_rsa ./init.sql ec2-user@$TARGET_IP:/home/ec2-user/init.sql
+
+          # SSH로 접속해서 MySQL 실행 (변수를 인라인으로 전달)
+          ssh -i /home/runner/.ssh/id_rsa ec2-user@$TARGET_IP \
+            "mysql -h $RDS_ENDPOINT -u $DB_USER -p'$DB_PASS' < /home/ec2-user/init.sql"
           
-      # 3. 앤서블 실행
+      # 앤서블 실행
       - name: Ansible Running Start
         run: |
           cd ansible
           ansible-playbook -i inventory.ini site.yml
-
-
