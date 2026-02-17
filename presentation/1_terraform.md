@@ -11,7 +11,7 @@ Terraform을 사용하여 AWS 인프라를 생성하는 단계이다.
 - [1-2. 네트워크 선택](./1-2_네트워크_선택.md)
 - [1-3. Security Group 설정](./1-3_Security_Group_설정.md)
 - [1-4. EC2 인스턴스 생성](./1-4_EC2_인스턴스_생성.md)
-- [1-5. Terraform 실행 및 확인 절차](./1-5_Terraform_실행_및_확인.md)
+- [1-5. Terraform 실행 및 확인 절차](./1-5_Terraform_실행_및_확인_절차.md)
 
 ---
 
