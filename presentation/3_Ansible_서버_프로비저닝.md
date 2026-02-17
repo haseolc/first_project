@@ -35,6 +35,7 @@ Ansible 단계는 다음 순서로 진행된다.
 
 ## 🔄 전체 구성 흐름
 
+```text
 EC2
 ↓
 Ansible 실행
@@ -46,6 +47,8 @@ Kubernetes 리소스 배포
 Ingress + WAF 적용
 ↓
 Monitoring 구성
+```
+
 
 
 ---
