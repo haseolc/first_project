@@ -53,12 +53,12 @@ resource "aws_security_group" "rds_sg" {
     ]
   }
 
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  #egress {
+  #  from_port   = 0
+  #  to_port     = 0
+  #  protocol    = "-1"
+  #  cidr_blocks = ["0.0.0.0/0"]
+  #}
 
   tags = {
     Name = "rds-sg-7th-room"
@@ -69,6 +69,26 @@ resource "aws_security_group" "rds_sg" {
 resource "aws_db_subnet_group" "rds_subnet_group" {
   name       = "rds-subnet-group"
   subnet_ids = [aws_subnet.private_a.id, aws_subnet.private_b.id]
+}
+
+# 프라이빗 라우팅 테이블 생성
+resource "aws_route_table" "private_rt" {
+  vpc_id = data.aws_vpc.default.id
+
+  tags = {
+    Name = "rds-private-rt"
+  }
+}
+
+# 프라이빗 서브넷 라우팅 연결
+resource "aws_route_table_association" "private_a_assoc" {
+  subnet_id      = aws_subnet.private_a.id
+  route_table_id = aws_route_table.private_rt.id
+}
+
+resource "aws_route_table_association" "private_b_assoc" {
+  subnet_id      = aws_subnet.private_b.id
+  route_table_id = aws_route_table.private_rt.id
 }
 
 # RDS 인스턴스 설정 (프리티어 & 비용 방어 최적화)
@@ -93,7 +113,7 @@ resource "aws_db_instance" "db_7th_room" {
   backup_window = "18:00-19:00"  # KST 기준 03:00~04:00
   skip_final_snapshot     = false
   backup_retention_period  = 1
-  delete_automated_backups = true # 삭제 시 백업도 즉시 삭제
+  #delete_automated_backups = true # 삭제 시 백업도 즉시 삭제
 }
 
 output "rds_endpoint" {
