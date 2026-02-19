@@ -10,10 +10,10 @@ GRAFANA_PORT = "30000"
 
 def get_db_connection():
     return mysql.connector.connect(
-        host=os.environ.get("DB_HOST"), #, "terraform-20260211044941925200000001.cl0aokksg3rp.ap-northeast-2.rds.amazonaws.com"), # <---------- RDS 엔드포인트 
-        user=os.environ.get("DB_USER"), #, "admin"),
-        password = os.environ.get("DB_PASSWORD"), # k3s secret 참조
-        database=os.environ.get("DB_NAME") #, "admin_db")
+        host=os.environ.get("DB_HOST"),
+        user=os.environ.get("DB_USER"),
+        password = os.environ.get("DB_PASSWORD"),
+        database=os.environ.get("DB_NAME")
     )
 
 @app.route("/")
@@ -25,7 +25,7 @@ def login():
     admin_id = request.form.get("admin_id")
     admin_pw = request.form.get("password")
 
-    # 접속한 서버의 IP를 자동으로 가져오기
+    # 접속한 서버의 IP 자동으로 가져오기
     host_ip = request.host.split(':')[0]
     target_url = f"http://{host_ip}:{GRAFANA_PORT}"
     dashboard_url = f"{target_url}/dashboards"
@@ -42,16 +42,6 @@ def login():
     cursor.close()
     conn.close()
 
-    #if admin:
-    #        # 입력받은 비밀번호 해싱
-    #        input_pw_hash = hashlib.sha256(admin_pw.encode()).hexdigest()
-            
-    #        # DB의 해시값과 비교
-    #        if admin['admin_pw'] == input_pw_hash:
-    #              return redirect(target_url)
-                #현재는 target_url로 리다이렉트 = 그라파나 홈으로 이동
-                #대시보드로 바로 이동하려면 dashboard_url로 리다이렉트
-
     if admin:
         return redirect(dashboard_url) 
     else:
@@ -59,6 +49,3 @@ def login():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
-
-
-
