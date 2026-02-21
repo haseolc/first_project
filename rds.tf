@@ -8,6 +8,14 @@ variable "db_password" {
   sensitive   = true
 }
 
+# 기존 EC2 데이터 조회 (퍼블릭 IP 조회용)
+data "aws_instance" "room7" {
+  filter {
+    name   = "tag:Name"
+    values = ["ec2-7th-room"]
+  }
+}
+
 # 기존 VPC/SG/서브넷 재사용
 data "aws_vpc" "default" { default = true }
 data "aws_security_group" "rds_sg" { name = "rds_sg_7th_room" }
@@ -42,6 +50,10 @@ resource "aws_db_instance" "db_7th_room_dr" {
   backup_window           = "18:00-19:00"
   skip_final_snapshot     = false
   backup_retention_period = 1
+}
+
+output "ec2_public_ip" {
+  value = data.aws_instance.room7.public_ip
 }
 
 output "rds_endpoint" {
