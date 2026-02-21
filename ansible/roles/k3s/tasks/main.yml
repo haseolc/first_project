@@ -69,8 +69,8 @@
     DB_PASSWORD: "{{ DB_PASSWORD }}"
 
 - name: "infra.yml 파일을 서버로 복사"
-  ansible.builtin.copy:
-    src: ../infra.yml
+  ansible.builtin.template:
+    src: infra.yml.j2
     dest: /home/ec2-user/infra.yml
     owner: ec2-user
     group: ec2-user

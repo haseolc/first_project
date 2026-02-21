@@ -33,7 +33,7 @@ spec:
         - containerPort: 5000
         env:
         - name: DB_HOST
-          value: "db"              
+          value: db # RDS 연결용 ExternalName 서비스 참조
         - name: DB_USER
           value: admin
 
@@ -71,7 +71,7 @@ metadata:
 spec:
   type: ExternalName
   # 평상시에는 현재 사용 중인 RDS 주소를 적어줍니다.
-  externalName: "__RDS_ENDPOINT__"
+  externalName: {{ rds_endpoint }}
 
 
 ---
