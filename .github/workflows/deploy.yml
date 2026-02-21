@@ -141,13 +141,13 @@ jobs:
           ansible-playbook -i inventory.ini site.yml
 
       # GitHub Secret(DB_PASSWORD)을 K3s Secret으로 생성
-      - name: Create Kubernetes DB Secret
-        run: |
-          TARGET_IP=${{ needs.terraform.outputs.EC2_PUBLIC_IP }}
-          DB_PASS=${{ secrets.DB_PASSWORD }}
+      #- name: Create Kubernetes DB Secret
+      #  run: |
+      #    TARGET_IP=${{ needs.terraform.outputs.EC2_PUBLIC_IP }}
+      #    DB_PASS=${{ secrets.DB_PASSWORD }}
 
-          ssh -i /home/runner/.ssh/id_rsa ec2-user@$TARGET_IP << EOF
-            sudo k3s kubectl create secret generic db-secret \
-              --from-literal=DB_PASSWORD="$DB_PASS" \
-              --dry-run=client -o yaml | sudo k3s kubectl apply -f -
-          EOF
+      #    ssh -i /home/runner/.ssh/id_rsa ec2-user@$TARGET_IP << EOF
+      #      sudo k3s kubectl create secret generic db-secret \
+      #        --from-literal=DB_PASSWORD="$DB_PASS" \
+      #        --dry-run=client -o yaml | sudo k3s kubectl apply -f -
+      #    EOF
