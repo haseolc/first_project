@@ -98,11 +98,11 @@ jobs:
           RDS_ENDPOINT=${{ needs.terraform.outputs.RDS_ENDPOINT }}
           
           # init.sql 전송
-          scp -i /home/runner/.ssh/id_rsa ./myapp/api/init.sql ec2-user@$TARGET_IP:/home/ec2-user/init.sql
-          
-          # 앤서블이 설치한 mariadb105(mysql) 도구로 SQL 실행
+          scp -i /home/runner/.ssh/id_rsa ./init.sql ec2-user@$TARGET_IP:/home/ec2-user/init.sql
+
+             # SSH로 접속해서 MySQL 실행 (변수를 인라인으로 전달)
           ssh -i /home/runner/.ssh/id_rsa ec2-user@$TARGET_IP \
-            "mysql -h $RDS_ENDPOINT -u admin -p'${{ secrets.DB_PASSWORD }}' < /home/ec2-user/init.sql"
+            "mysql -h $RDS_ENDPOINT -u $DB_USER -p'$DB_PASS' < /home/ec2-user/init.sql"
 
       # [단계 3] 앱 새로고침 (DB 연결 보장)
       - name: Refresh API Deployment
