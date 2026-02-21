@@ -38,7 +38,7 @@ spec:
         - name: DB_USER
           value: admin
 
-        # GitHub Actions에서 생성한 Kubernetes Secret 사용
+        # main.yml에서 생성한 Kubernetes Secret 사용
         - name: DB_PASSWORD # app.py에서 참조
           valueFrom:
             secretKeyRef:
