@@ -4,7 +4,7 @@ on:
   workflow_dispatch: # 수동 실행 버튼
 
 jobs:
-  #도커 빌드 및 푸시
+  # 도커 빌드 및 푸시
   build-and-push:
     runs-on: ubuntu-latest
     steps:
@@ -20,7 +20,7 @@ jobs:
       - name: Build and Push Flask App
         uses: docker/build-push-action@v5
         with:
-          # ★ 매우 중요: Dockerfile이 있는 정확한 경로를 지정합니다.
+          # Dockerfile이 있는 경로 지정
           context: ./myapp/api
           push: true
           # 이미지 이름 
@@ -42,7 +42,7 @@ jobs:
         with:
           terraform_version: 1.14.4
           terraform_wrapper: false
-          #명확한 주소 확인을 위해 다른 출력은 생략
+          # 명확한 주소 확인을 위해 다른 출력은 생략
 
       - name: Terraform Init & plan & apply
         id: apply
@@ -50,8 +50,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-        # terraform plan이 없어도 되나요?
-        # -> apply 수행 시 먼저 plan 이 자동 수행됩니다.
+        # apply 시 plan 자동 수행되므로 별도 plan 불필요
         run: |
           cd terraform
           terraform init
@@ -91,7 +90,7 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > /home/runner/.ssh/id_rsa
           chmod 400 /home/runner/.ssh/id_rsa
           
-          # 서버 부팅 대기 (SSH 포트 열릴 때까지 기다립니다)
+          # 서버 부팅 대기 (SSH 포트 열릴 때까지 기다림)
           echo "Waiting for SSH to be available on ${{ needs.terraform.outputs.EC2_PUBLIC_IP }}..."
           for i in $(seq 1 30); do
             nc -z -w 5 ${{ needs.terraform.outputs.EC2_PUBLIC_IP }} 22 && break
@@ -103,12 +102,11 @@ jobs:
           TARGET_IP=${{ needs.terraform.outputs.EC2_PUBLIC_IP }}
           ssh-keyscan -H $TARGET_IP >> /home/runner/.ssh/known_hosts
 
-      # 2. Inventory 파일 생성 (절대 경로 사용)
+      # Inventory 파일 생성 (절대 경로 사용)
       - name: Create Ansible inventory file
         run: |
          cd ansible
          echo "[k3s_cluster]" > inventory.ini
-         # ~/.ssh 대신 /home/runner/.ssh 절대 경로 사용
          echo "${{ needs.terraform.outputs.EC2_PUBLIC_IP }} ansible_user=ec2-user ansible_ssh_private_key_file=/home/runner/.ssh/id_rsa" >> inventory.ini
 
       - name: Install Ansible collections
@@ -120,6 +118,18 @@ jobs:
       - name: Replace RDS endpoint in Deployment YAML
         run: |
           sed -i "s|__RDS_ENDPOINT__|${{ needs.terraform.outputs.RDS_ENDPOINT }}|g" ansible/roles/k3s/infra.yml
+
+      # GitHub Secret(DB_PASSWORD)을 K3s Secret으로 생성
+      - name: Create Kubernetes DB Secret
+        run: |
+          TARGET_IP=${{ needs.terraform.outputs.EC2_PUBLIC_IP }}
+          DB_PASS=${{ secrets.DB_PASSWORD }}
+
+          ssh -i /home/runner/.ssh/id_rsa ec2-user@$TARGET_IP << EOF
+            kubectl create secret generic db-secret \
+              --from-literal=DB_PASSWORD="$DB_PASS" \
+              --dry-run=client -o yaml | kubectl apply -f -
+          EOF
 
       # EC2에서 RDS에 접속해서 init.sql 실행
       - name: Upload init.sql and initialize RDS
