@@ -7,18 +7,15 @@ jobs:
   terraform:
     runs-on: ubuntu-latest
     steps:
-      # 코드 체크아웃
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # Terraform 설치
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.14.4
           terraform_wrapper: false
 
-      # Terraform 초기화 & 배포
       - name: Terraform Init & Apply
         id: apply
         env:
@@ -56,15 +53,15 @@ jobs:
           echo "${{ secrets.EC2_PUBLIC_IP }} ansible_user=ec2-user ansible_ssh_private_key_file=/home/runner/.ssh/id_rsa" >> inventory.ini
 
       # RDS endpoint 치환
-      - name: Replace RDS endpoint in Deployment YAML
+      - name: Replace RDS endpoint in infra.yml
         run: |
           sed -i "s|__RDS_ENDPOINT__|${{ needs.terraform.outputs.RDS_ENDPOINT }}|g" ansible/roles/k3s/infra.yml
 
-      # EC2에서 K3s 앱 재배포
-      - name: Run Ansible Playbook
+      # EC2에서 K3s 앱 재배포 (업데이트)
+      - name: Run Ansible infra.yml
         run: |
           cd ansible
-          ansible-playbook -i inventory.ini site.yml
+          ansible-playbook -i inventory.ini roles/k3s/infra.yml
 
       # K3s Secret 생성 (DB_PASSWORD)
       - name: Create Kubernetes DB Secret
