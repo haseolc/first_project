@@ -1,15 +1,15 @@
 # RDS 비밀번호용 K3s Secret 생성
-apiVersion: v1
-kind: Secret
-metadata:
-  name: db-secret
-  namespace: default
-type: Opaque
-data:
-  DB_PASSWORD: YWRtaW4xMjM0IQ== # Base64
+#apiVersion: v1
+#kind: Secret
+#metadata:
+#  name: db-secret
+#  namespace: default
+#type: Opaque
+#data:
+#  DB_PASSWORD: YWRtaW4xMjM0IQ== # Base64
   
 ---
-# --- [Flask API Deployment] ---
+# Flask API Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -31,24 +31,25 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 5000
-        env: # 환경변수
+        env:
         - name: DB_HOST
-          value: "__RDS_ENDPOINT__" #rds-7th-room.cl0aokksg3rp.ap-northeast-2.rds.amazonaws.com # <---------- RDS 엔드포인트
+          value: "__RDS_ENDPOINT__"
               
         - name: DB_USER
           value: admin
-              
+
+        # GitHub Actions에서 생성한 Kubernetes Secret 사용
         - name: DB_PASSWORD # app.py에서 참조
           valueFrom:
             secretKeyRef:
-              name: db-secret # Secret 이름
-              key: DB_PASSWORD # Secret data key
+              name: db-secret
+              key: DB_PASSWORD
               
         - name: DB_NAME
           value: admin_db
 
 ---
-# --- [API 내부 Service] ---
+# API 내부 Service
 apiVersion: v1
 kind: Service
 metadata:
@@ -61,8 +62,9 @@ spec:
   - protocol: TCP
     port: 80
     targetPort: 5000    
+    
 ---
-# --- [★ 핵심: 보안 통로 Ingress + WAF] ---
+# ★ 핵심: 보안 통로 Ingress + WAF
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -85,8 +87,3 @@ spec:
             name: myapi
             port:
               number: 80
-
-
-
-
-
