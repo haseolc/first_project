@@ -9,11 +9,15 @@ variable "db_password" {
 }
 
 # 기존 EC2 데이터 조회 (퍼블릭 IP 조회용)
+#data "aws_instance" "room7" {
+#  filter {
+#    name   = "tag:Name"
+#    values = ["ec2-7th-room"]
+#  }
+#}
+
 data "aws_instance" "room7" {
-  filter {
-    name   = "tag:Name"
-    values = ["ec2-7th-room"]
-  }
+  instance_id = "i-0510451266116b451"  # EC2 ID 직접 입력
 }
 
 # 기존 VPC/SG/서브넷 재사용
