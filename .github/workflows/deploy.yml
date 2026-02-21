@@ -119,18 +119,6 @@ jobs:
         run: |
           sed -i "s|__RDS_ENDPOINT__|${{ needs.terraform.outputs.RDS_ENDPOINT }}|g" ansible/roles/k3s/infra.yml
 
-      # GitHub Secret(DB_PASSWORD)을 K3s Secret으로 생성
-      - name: Create Kubernetes DB Secret
-        run: |
-          TARGET_IP=${{ needs.terraform.outputs.EC2_PUBLIC_IP }}
-          DB_PASS=${{ secrets.DB_PASSWORD }}
-
-          ssh -i /home/runner/.ssh/id_rsa ec2-user@$TARGET_IP << EOF
-            kubectl create secret generic db-secret \
-              --from-literal=DB_PASSWORD="$DB_PASS" \
-              --dry-run=client -o yaml | sudo k3s kubectl apply -f -
-          EOF
-
       # EC2에서 RDS에 접속해서 init.sql 실행
       - name: Upload init.sql and initialize RDS
         run: |
@@ -151,3 +139,15 @@ jobs:
         run: |
           cd ansible
           ansible-playbook -i inventory.ini site.yml
+
+      # GitHub Secret(DB_PASSWORD)을 K3s Secret으로 생성
+      - name: Create Kubernetes DB Secret
+        run: |
+          TARGET_IP=${{ needs.terraform.outputs.EC2_PUBLIC_IP }}
+          DB_PASS=${{ secrets.DB_PASSWORD }}
+
+          ssh -i /home/runner/.ssh/id_rsa ec2-user@$TARGET_IP << EOF
+            sudo k3s kubectl create secret generic db-secret \
+              --from-literal=DB_PASSWORD="$DB_PASS" \
+              --dry-run=client -o yaml | sudo k3s kubectl apply -f -
+          EOF
