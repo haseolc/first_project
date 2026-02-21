@@ -8,56 +8,50 @@ variable "db_password" {
   sensitive   = true
 }
 
-# 기존 EC2 데이터 조회 (퍼블릭 IP 조회용)
-#data "aws_instance" "room7" {
-#  filter {
-#    name   = "tag:Name"
-#    values = ["ec2-7th-room"]
-#  }
-#}
-
-data "aws_instance" "room7" {
-  instance_id = "i-0510451266116b451"  # EC2 ID 직접 입력
+# 1. 기존 EC2 데이터 조회 (태그 기반 권장 - ID가 바뀌어도 대응 가능)
+data "aws_instance" "ec2-7th-room" {
+  filter {
+    name   = "tag:Name"
+    values = ["ec2-7th-room"] # main 브랜치에서 정한 이름
+  }
+  filter {
+    name   = "instance-state-name"
+    values = ["running"]
+  }
 }
 
-# 기존 VPC/SG/서브넷 재사용
+# 2. 기존 인프라 자원 재사용
 data "aws_vpc" "default" { default = true }
 data "aws_security_group" "rds_sg" { name = "rds_sg_7th_room" }
 data "aws_db_subnet_group" "rds_subnet_group" { name = "rds-subnet-group" }
 
-# 최신 스냅샷 조회
-data "aws_db_snapshot" "latest_automated" {
-  db_instance_identifier = "rds-7th-room"
+# 3. 최신 스냅샷 조회 (최근 생성된 수동 스냅샷 기준)
+data "aws_db_snapshot" "latest_manual" {
+  db_instance_identifier = "rds-7th-room" # 원본 DB 식별자
   most_recent            = true
-  snapshot_type          = "manual" # automated(자동 스냅샷) or manual(수동 스냅샷)
+  snapshot_type          = "manual"      # 직접 생성한 스냅샷 기준
 }
 
-# DR용 RDS 스냅샷 복구
+# 4. DR용 RDS 스냅샷 복구
 resource "aws_db_instance" "db_7th_room_dr" {
   identifier             = "rds-7th-room-dr"
-  snapshot_identifier    = data.aws_db_snapshot.latest_automated.id
-  allocated_storage      = 20
-  storage_type           = "gp2"
-  engine                 = "mysql"
-  engine_version         = "8.0"
+  snapshot_identifier    = data.aws_db_snapshot.latest_manual.id
   instance_class         = "db.t3.micro"
-  db_name                = "admin_db"
-  username               = "admin"
+  
+  # 스냅샷 복구 시 엔진, 버전, DB이름 등은 스냅샷 설정을 그대로 따릅니다.
+  # 비밀번호는 복구된 인스턴스에 새로 설정할 수 있습니다.
   password               = var.db_password
 
   db_subnet_group_name   = data.aws_db_subnet_group.rds_subnet_group.name
   vpc_security_group_ids = [data.aws_security_group.rds_sg.id]
 
-  multi_az                = false
-  availability_zone       = "ap-northeast-2a"
   publicly_accessible     = false
-  backup_window           = "18:00-19:00"
-  skip_final_snapshot     = false
-  backup_retention_period = 1
+  skip_final_snapshot     = true # 실습용이므로 종료 시 스냅샷 생략
 }
 
+# 5. 결과 출력 (GitHub Actions 전달용)
 output "ec2_public_ip" {
-  value = data.aws_instance.room7.public_ip
+  value = data.aws_instance.ec2-7th-room.public_ip
 }
 
 output "rds_endpoint" {
