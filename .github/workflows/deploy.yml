@@ -57,12 +57,6 @@ jobs:
         run: |
           sed -i "s|__RDS_ENDPOINT__|${{ needs.terraform.outputs.RDS_ENDPOINT }}|g" ansible/roles/k3s/infra.yml
 
-      # EC2에서 K3s 앱 재배포 (업데이트)
-      - name: Run Ansible infra.yml
-        run: |
-          cd ansible
-          ansible-playbook -i inventory.ini roles/k3s/infra.yml
-
       # K3s Secret 생성 (DB_PASSWORD)
       - name: Create Kubernetes DB Secret
         run: |
@@ -71,3 +65,9 @@ jobs:
               --from-literal=DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
               --dry-run=client -o yaml | sudo k3s kubectl apply -f -
           EOF
+
+      # EC2에서 K3s 앱 재배포 (업데이트)
+      - name: Run Ansible infra.yml
+        run: |
+          cd ansible
+          ansible-playbook -i inventory.ini roles/k3s/infra.yml
