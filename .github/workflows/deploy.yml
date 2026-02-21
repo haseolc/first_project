@@ -6,9 +6,8 @@ on:
 jobs:
   terraform:
     runs-on: ubuntu-latest
-
     outputs:
-      # ★ [필수] Job 레벨에서 하단 Step의 결과값을 외부로 노출합니다.
+      # 대문자로 통일합니다.
       RDS_ENDPOINT: ${{ steps.get-rds.outputs.RDS_ENDPOINT }}
       EC2_PUBLIC_IP: ${{ steps.get-ec2-ip.outputs.EC2_PUBLIC_IP }}
 
@@ -29,12 +28,15 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
         run: |
+          cd terraform
           terraform init
           terraform apply -auto-approve
 
       - name: Get RDS Endpoint
         id: get-rds
         run: |
+          cd terraform
+          # rds_endpoint 가 tf파일의 output 이름과 일치해야 합니다.
           ENDPOINT=$(terraform output -raw rds_endpoint)
           echo "RDS_ENDPOINT=$ENDPOINT" >> $GITHUB_OUTPUT
 
@@ -45,55 +47,57 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ap-northeast-2
         run: |
+          # 쿼리문을 더 안정적으로 수정 (검색 실패 시 빈값 반환)
           INSTANCE_IP=$(aws ec2 describe-instances \
             --filters "Name=tag:Name,Values=AWS_ec2_sg_7th_room" "Name=instance-state-name,Values=running" \
-            --query "Reservations[0].Instances[0].PublicIpAddress" \
+            --query "Reservations[].Instances[0].PublicIpAddress" \
             --output text)
+          
+          if [ "$INSTANCE_IP" == "None" ] || [ -z "$INSTANCE_IP" ]; then
+            echo "ERROR: 인스턴스를 찾지 못했습니다. AWS 콘솔에서 Name 태그를 확인하세요."
+            exit 1
+          fi
           echo "EC2_PUBLIC_IP=$INSTANCE_IP" >> $GITHUB_OUTPUT
 
   deploy:
     needs: terraform
     runs-on: ubuntu-latest
+    # IP가 제대로 넘어왔을 때만 실행
+    if: needs.terraform.outputs.EC2_PUBLIC_IP != 'None' && needs.terraform.outputs.EC2_PUBLIC_IP != ''
     steps:
       - uses: actions/checkout@v4
 
-      # SSH 키 설정
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 400 ~/.ssh/id_rsa
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /home/runner/.ssh/id_rsa
+          chmod 400 /home/runner/.ssh/id_rsa
+          # 대문자 EC2_PUBLIC_IP 사용
+          ssh-keyscan -H ${{ needs.terraform.outputs.EC2_PUBLIC_IP }} >> /home/runner/.ssh/known_hosts
 
-      # Inventory 파일 생성 (Ansible용)
       - name: Create Ansible inventory file
         run: |
           cd ansible
           echo "[k3s_cluster]" > inventory.ini
-          echo "${{ needs.terraform.outputs.ec2_public_ip }} ansible_user=ec2-user ansible_ssh_private_key_file=/home/runner/.ssh/id_rsa" >> inventory.ini
+          # 대문자 EC2_PUBLIC_IP 사용
+          echo "${{ needs.terraform.outputs.EC2_PUBLIC_IP }} ansible_user=ec2-user ansible_ssh_private_key_file=/home/runner/.ssh/id_rsa" >> inventory.ini
 
-      # RDS endpoint 치환
-      - name: Replace RDS endpoint in infra.yml
-        run: |
-          sed -i "s|__RDS_ENDPOINT__|${{ needs.terraform.outputs.RDS_ENDPOINT }}|g" ansible/roles/k3s/infra.yml
-
-      # K3s Secret 생성 (DB_PASSWORD)
       - name: Create Kubernetes DB Secret
         run: |
-          ssh -i ~/.ssh/id_rsa ec2-user@${{ needs.terraform.outputs.ec2_public_ip }} << EOF
+          # 대문자 EC2_PUBLIC_IP 사용
+          ssh -i /home/runner/.ssh/id_rsa ec2-user@${{ needs.terraform.outputs.EC2_PUBLIC_IP }} << EOF
             sudo k3s kubectl create secret generic db-secret \
               --from-literal=DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
               --dry-run=client -o yaml | sudo k3s kubectl apply -f -
           EOF
 
-      # EC2에서 K3s 앱 재배포 (업데이트)
       - name: Run Ansible infra.yml
         run: |
           cd ansible
-          ansible-playbook -i inventory.ini roles/k3s/infra.yml
+          # RDS 주소를 변수로 전달
+          ansible-playbook -i inventory.ini site.yml \
+            -e "rds_endpoint=${{ needs.terraform.outputs.RDS_ENDPOINT }}"
 
-      # 앱 강제 재시작
       - name: Restart myapi Deployment
         run: |
-          ssh -i ~/.ssh/id_rsa ec2-user@${{ needs.terraform.outputs.ec2_public_ip }} << EOF
-            sudo k3s kubectl rollout restart deployment myapi
-          EOF
+          ssh -i /home/runner/.ssh/id_rsa ec2-user@${{ needs.terraform.outputs.EC2_PUBLIC_IP }} "sudo k3s kubectl rollout restart deployment myapi"
