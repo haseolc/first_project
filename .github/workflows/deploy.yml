@@ -71,3 +71,10 @@ jobs:
         run: |
           cd ansible
           ansible-playbook -i inventory.ini roles/k3s/infra.yml
+
+      # 앱 강제 재시작
+      - name: Restart myapi Deployment
+        run: |
+          ssh -i ~/.ssh/id_rsa ec2-user@${{ secrets.EC2_PUBLIC_IP }} << EOF
+            sudo k3s kubectl rollout restart deployment myapi
+          EOF
