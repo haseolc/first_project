@@ -31,15 +31,15 @@ resource "aws_instance" "ec2_7th_room" {
     }
   }
 
-  # MySQL client 설치
-  user_data = <<-EOF
-              #!/bin/bash
-              sudo dnf install -y wget
-              sudo wget https://dev.mysql.com/get/mysql80-community-release-el9-1.noarch.rpm
-              sudo dnf install -y mysql80-community-release-el9-1.noarch.rpm
-              sudo dnf update -y
-              sudo dnf install -y mysql-community-client
-              EOF
+  # # MySQL client 설치
+  # user_data = <<-EOF
+  #             #!/bin/bash
+  #             sudo dnf update -y #항상 업데이트가 먼저인데 왜 중간에 들어가 있었는지 모르겠음
+  #             sudo dnf install -y wget
+  #             sudo wget https://dev.mysql.com/get/mysql80-community-release-el9-1.noarch.rpm
+  #             sudo dnf install -y mysql80-community-release-el9-1.noarch.rpm
+  #             sudo dnf install -y mysql-community-client
+  #             EOF
 
   tags = {
     Name        = var.instance_name

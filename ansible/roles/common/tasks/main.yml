@@ -30,3 +30,8 @@
 - name: "인터프리터 경로 고정"
   ansible.builtin.set_fact:
     ansible_python_interpreter: /usr/bin/python3
+
+- name: "MySQL 호환 클라이언트(MariaDB) 설치"
+  ansible.builtin.dnf:
+    name: mariadb105
+    state: present
