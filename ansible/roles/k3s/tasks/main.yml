@@ -65,7 +65,8 @@
       --from-literal=DB_PASSWORD="$DB_PASSWORD" \
       --dry-run=client -o yaml | /usr/local/bin/kubectl apply -f -
   environment:
-    DB_PASSWORD: "{{ lookup('env','DB_PASSWORD') }}"
+    KUBECONFIG: /home/ec2-user/.kube/config
+    DB_PASSWORD: "{{ DB_PASSWORD }}"
 
 - name: "infra.yml 파일을 서버로 복사"
   ansible.builtin.copy:
@@ -100,3 +101,4 @@
 
 # 그러나 Amazon Linux 2는 기본적으로 SELinux가 Permissive(로그만 남기고 차단은 안 함) 또는 Disabled 상태인 경우가 많습니다.
 # 호스트 OS 자체가 SELinux를 강력하게 강제(Enforcing)하고 있지 않다면, K3s용 패키지를 설치해도 실제 차단 효과는 미비할 것입니다
+
