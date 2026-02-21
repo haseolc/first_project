@@ -1,11 +1,11 @@
 variable "region" {
-  description = "AWS region to deploy resources into."
+  description = "AWS region"
   type        = string
   default     = "ap-northeast-2"
 }
 
 variable "instance_type" {
-  description = "EC2 instance type."
+  description = "EC2 instance type"
   type        = string
   default     = "t3.small"
 }
@@ -17,43 +17,43 @@ variable "ami_id" {
 }
 
 variable "key_pair_name" {
-  description = "Existing EC2 Key Pair name in the target region (must already exist in AWS)."
+  description = "EC2 Key Pair name"
   type        = string
   default     = "infra-dev-key"
 }
 
 variable "associate_public_ip" {
-  description = "Whether to associate a public IPv4 address to the instance in the selected subnet."
+  description = "Associate a public IP with the instance"
   type        = bool
   default     = true
 }
 
 variable "ssh_sg_name" {
-  description = "Existing Security Group name for SSH access."
+  description = "SSH access Security Group name"
   type        = string
   default     = "ssh_sg_7th_room"
 }
 
 variable "web_sg_name" {
-  description = "Existing Security Group name for web/cluster traffic."
+  description = "Web/cluster traffic Security Group name"
   type        = string
   default     = "web_sg_7th_room"
 }
 
 variable "instance_name" {
-  description = "Name tag for the EC2 instance."
+  description = "EC2 instance Name tag"
   type        = string
   default     = "ec2-7th-room"
 }
 
 variable "environment" {
-  description = "Environment tag (e.g., dev, prod)."
+  description = "EC2 instance Environment tag"
   type        = string
   default     = "dev"
 }
 
 variable "project" {
-  description = "프로젝트"
+  description = "EC2 instance Project tag"
   type        = string
   default     = "infra-auto"
 }
