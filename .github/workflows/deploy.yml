@@ -6,11 +6,6 @@ on:
 jobs:
   terraform:
     runs-on: ubuntu-latest
-    
-    outputs:
-      # ★ [필수] Job 레벨에서 하단 Step의 결과값을 외부로 노출합니다.
-      RDS_ENDPOINT: ${{ steps.get-rds.outputs.RDS_ENDPOINT }}
-      EC2_PUBLIC_IP: ${{ steps.get-ec2-ip.outputs.EC2_PUBLIC_IP }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -31,24 +26,13 @@ jobs:
           terraform init
           terraform apply -auto-approve
 
-      - name: Get RDS Endpoint
-        id: get-rds
+      - name: Get Terraform Outputs
+        id: get-outputs
         run: |
-          ENDPOINT=$(terraform output -raw rds_endpoint)
-          echo "RDS_ENDPOINT=$ENDPOINT" >> $GITHUB_OUTPUT
-
-      - name: Fetch EC2 IP by Tag
-        id: get-ec2-ip
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ap-northeast-2
-        run: |
-          INSTANCE_IP=$(aws ec2 describe-instances \
-            --filters "Name=tag:Name,Values=AWS_ec2_sg_7th_room" "Name=instance-state-name,Values=running" \
-            --query "Reservations[0].Instances[0].PublicIpAddress" \
-            --output text)
-          echo "EC2_PUBLIC_IP=$INSTANCE_IP" >> $GITHUB_OUTPUT
+          RDS_ENDPOINT=$(terraform output -raw rds_endpoint)
+          EC2_PUBLIC_IP=$(terraform output -raw ec2_public_ip)
+          echo "RDS_ENDPOINT=$RDS_ENDPOINT" >> $GITHUB_OUTPUT
+          echo "EC2_PUBLIC_IP=$EC2_PUBLIC_IP" >> $GITHUB_OUTPUT
 
   deploy:
     needs: terraform
@@ -68,7 +52,7 @@ jobs:
         run: |
           cd ansible
           echo "[k3s_cluster]" > inventory.ini
-          echo "${{ needs.terraform.outputs.ec2_public_ip }} ansible_user=ec2-user ansible_ssh_private_key_file=/home/runner/.ssh/id_rsa" >> inventory.ini
+          echo "${{ needs.terraform.outputs.EC2_PUBLIC_IP }} ansible_user=ec2-user ansible_ssh_private_key_file=/home/runner/.ssh/id_rsa" >> inventory.ini
 
       # RDS endpoint 치환
       - name: Replace RDS endpoint in infra.yml
@@ -78,11 +62,11 @@ jobs:
       # K3s Secret 생성 (DB_PASSWORD)
       - name: Create Kubernetes DB Secret
         run: |
-          ssh -i ~/.ssh/id_rsa ec2-user@${{ needs.terraform.outputs.ec2_public_ip }} << EOF
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ec2-user@${{ needs.terraform.outputs.EC2_PUBLIC_IP }} << EOF
             sudo k3s kubectl create secret generic db-secret \
               --from-literal=DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
               --dry-run=client -o yaml | sudo k3s kubectl apply -f -
-          EOF
+            EOF
 
       # EC2에서 K3s 앱 재배포 (업데이트)
       - name: Run Ansible infra.yml
@@ -93,6 +77,6 @@ jobs:
       # 앱 강제 재시작
       - name: Restart myapi Deployment
         run: |
-          ssh -i ~/.ssh/id_rsa ec2-user@${{ needs.terraform.outputs.ec2_public_ip }} << EOF
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ec2-user@${{ needs.terraform.outputs.EC2_PUBLIC_IP }} << EOF
             sudo k3s kubectl rollout restart deployment myapi
           EOF
