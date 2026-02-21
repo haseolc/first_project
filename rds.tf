@@ -27,6 +27,7 @@ resource "aws_subnet" "private_a" {
   vpc_id            = data.aws_vpc.default.id
   cidr_block        = "172.31.64.0/20" 
   availability_zone = "ap-northeast-2a"
+  
   tags = { Name = "rds-private-a" }
 }
 
@@ -34,6 +35,7 @@ resource "aws_subnet" "private_b" {
   vpc_id            = data.aws_vpc.default.id
   cidr_block        = "172.31.80.0/20"
   availability_zone = "ap-northeast-2b"
+  
   tags = { Name = "rds-private-b" }
 }
 
@@ -52,13 +54,6 @@ resource "aws_security_group" "rds_sg" {
       data.aws_security_group.web_sg.id
     ]
   }
-
-  #egress {
-  #  from_port   = 0
-  #  to_port     = 0
-  #  protocol    = "-1"
-  #  cidr_blocks = ["0.0.0.0/0"]
-  #}
 
   tags = {
     Name = "rds-sg-7th-room"
@@ -110,21 +105,11 @@ resource "aws_db_instance" "db_7th_room" {
   multi_az                = false
   availability_zone       = "ap-northeast-2a"
   publicly_accessible     = false
-  backup_window = "18:00-19:00"  # KST 기준 03:00~04:00
+  backup_window           = "18:00-19:00"  # KST 기준 03:00-04:00
   skip_final_snapshot     = false
-  backup_retention_period  = 1
-  #delete_automated_backups = true # 삭제 시 백업도 즉시 삭제
+  backup_retention_period = 1
 }
 
 output "rds_endpoint" {
   value = aws_db_instance.db_7th_room.address
 }
-
-# ---------- 생성 방법 (삭제 예정) ----------
-# [로컬 PC]
-# export TF_VAR_db_password="admin1234!"
-# terraform init
-# terraform apply
-# [PowerShell]
-# $env:TF_VAR_db_password="admin1234!"
-# terraform apply
