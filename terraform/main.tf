@@ -44,10 +44,6 @@ resource "aws_instance" "ec2_7th_room" {
   tags = {
     Name        = var.instance_name
     Environment = var.environment
+    Project     = var.project
   }
 }
-
-
-
-
-
