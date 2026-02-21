@@ -13,10 +13,17 @@ data "aws_vpc" "default" { default = true }
 data "aws_security_group" "rds_sg" { name = "rds_sg_7th_room" }
 data "aws_db_subnet_group" "rds_subnet_group" { name = "rds-subnet-group" }
 
+# 최신 자동 스냅샷 조회
+data "aws_db_snapshots" "latest_automated" {
+  db_instance_identifier = "rds-7th-room"
+  snapshot_type          = "automated"
+  most_recent            = true
+}
+
 # DR용 RDS 스냅샷 복구
 resource "aws_db_instance" "db_7th_room_dr" {
   identifier             = "rds-7th-room-dr"
-  snapshot_identifier = "rds-7th-room-snapshot-20260221" # ★ 중요 ★
+  snapshot_identifier    = "data.aws_db_snapshots.latest_automated.id" # ★ 중요 ★
   allocated_storage      = 20
   storage_type           = "gp2"
   engine                 = "mysql"
