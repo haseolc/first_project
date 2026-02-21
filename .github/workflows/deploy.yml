@@ -50,13 +50,20 @@ jobs:
         id: get-ip
         run: |
           cd terraform
-          echo "EC2_PUBLIC_IP=$(terraform output -raw room7_public_ip)" >> $GITHUB_OUTPUT
+          # IP를 가져와서 제대로 출력되는지 로그로 확인
+          TEMP_IP=$(terraform output -raw room7_public_ip)
+          echo "Current IP: $TEMP_IP"
+          # $GITHUB_OUTPUT에 저장
+          echo "EC2_PUBLIC_IP=$TEMP_IP" >> $GITHUB_OUTPUT
 
+
+      # RDS endpoint 가져옴
       - name: Get RDS Endpoint
         id: get-rds
+        working-directory: terraform
         run: |
-          cd terraform
-          echo "RDS_ENDPOINT=$(terraform output -raw rds_endpoint)" >> $GITHUB_OUTPUT
+          TEMP_RDS=$(terraform output -raw endpoint)
+          echo "RDS_ENDPOINT=$TEMP_RDS" >> $GITHUB_OUTPUT
           
   deploy:
     needs: [terraform, build-and-push]
