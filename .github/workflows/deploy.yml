@@ -96,6 +96,8 @@ jobs:
         run: |
           TARGET_IP=${{ needs.terraform.outputs.EC2_PUBLIC_IP }}
           RDS_ENDPOINT=${{ needs.terraform.outputs.RDS_ENDPOINT }}
+          DB_USER=admin
+          DB_PASS=${{ secrets.DB_PASSWORD }}
           
           # init.sql 전송
           scp -i /home/runner/.ssh/id_rsa ./init.sql ec2-user@$TARGET_IP:/home/ec2-user/init.sql
@@ -104,6 +106,8 @@ jobs:
           ssh -i /home/runner/.ssh/id_rsa ec2-user@$TARGET_IP \
             "mysql -h $RDS_ENDPOINT -u $DB_USER -p'$DB_PASS' < /home/ec2-user/init.sql"
 
+
+  
       # [단계 3] 앱 새로고침 (DB 연결 보장)
       - name: Refresh API Deployment
         run: |
