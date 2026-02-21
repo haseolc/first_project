@@ -1,0 +1,38 @@
+# Flask API Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: myapi
+  template:
+    metadata:
+      labels:
+        app: myapi
+    spec:
+      containers:
+      - name: myapi
+        image: kimsewon/myapi:latest
+        #image: kimsewon/myapi:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
+        env:
+        - name: DB_HOST
+          value: "__RDS_ENDPOINT__"
+              
+        - name: DB_USER
+          value: admin
+
+        # GitHub Actions에서 생성한 Kubernetes Secret 사용
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: DB_PASSWORD
+              
+        - name: DB_NAME
+          value: admin_db
