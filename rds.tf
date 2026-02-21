@@ -23,7 +23,7 @@ data "aws_db_snapshot" "latest_automated" {
 # DR용 RDS 스냅샷 복구
 resource "aws_db_instance" "db_7th_room_dr" {
   identifier             = "rds-7th-room-dr"
-  snapshot_identifier    = data.aws_db_snapshots.latest_automated.id # ★ 중요 ★
+  snapshot_identifier    = data.aws_db_snapshot.latest_automated.id # 스냅샷 복구
   allocated_storage      = 20
   storage_type           = "gp2"
   engine                 = "mysql"
