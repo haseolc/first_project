@@ -128,7 +128,7 @@ jobs:
           ssh -i /home/runner/.ssh/id_rsa ec2-user@$TARGET_IP << EOF
             kubectl create secret generic db-secret \
               --from-literal=DB_PASSWORD="$DB_PASS" \
-              --dry-run=client -o yaml | kubectl apply -f -
+              --dry-run=client -o yaml | sudo k3s kubectl apply -f -
           EOF
 
       # EC2에서 RDS에 접속해서 init.sql 실행
