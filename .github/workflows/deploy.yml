@@ -138,7 +138,7 @@ jobs:
       - name: Ansible Running Start
         run: |
           cd ansible
-          ansible-playbook -i inventory.ini site.yml
+          ansible-playbook -i inventory.ini site.yml -e "DB_PASSWORD=${{ secrets.DB_PASSWORD }}"
 
       # GitHub Secret(DB_PASSWORD)을 K3s Secret으로 생성
       #- name: Create Kubernetes DB Secret
