@@ -12,7 +12,7 @@ GRAFANA_PORT = "30000"
 def get_db_connection():
     try:
         return mysql.connector.connect(
-            host=os.environ.get("DB_HOST"),
+            host=os.environ.get("DB_HOST", "db"),
             user=os.environ.get("DB_USER"),
             password=os.environ.get("DB_PASSWORD"),
             database=os.environ.get("DB_NAME")

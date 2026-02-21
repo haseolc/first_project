@@ -33,8 +33,7 @@ spec:
         - containerPort: 5000
         env:
         - name: DB_HOST
-          value: "__RDS_ENDPOINT__"
-              
+          value: "db"              
         - name: DB_USER
           value: admin
 
@@ -62,7 +61,19 @@ spec:
   - protocol: TCP
     port: 80
     targetPort: 5000    
-    
+---
+# 3. ★ 핵심 추가: DB 연결용 이정표 (ExternalName)
+# 이 부분이 있어야 dr-restore 브랜치의 patch 명령어가 작동합니다.
+apiVersion: v1
+kind: Service
+metadata:
+  name: db  # 위 Deployment의 DB_HOST 값과 일치해야 함
+spec:
+  type: ExternalName
+  # 평상시에는 현재 사용 중인 RDS 주소를 적어줍니다.
+  externalName: "__RDS_ENDPOINT__"
+
+
 ---
 # ★ 핵심: 보안 통로 Ingress + WAF
 apiVersion: networking.k8s.io/v1
