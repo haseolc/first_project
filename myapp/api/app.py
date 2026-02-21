@@ -8,13 +8,18 @@ app = Flask(__name__)
 # 그라파나 포트 설정
 GRAFANA_PORT = "30000"
 
+# DB 연결 예외처리
 def get_db_connection():
-    return mysql.connector.connect(
-        host=os.environ.get("DB_HOST"),
-        user=os.environ.get("DB_USER"),
-        password = os.environ.get("DB_PASSWORD"),
-        database=os.environ.get("DB_NAME")
-    )
+    try:
+        return mysql.connector.connect(
+            host=os.environ.get("DB_HOST"),
+            user=os.environ.get("DB_USER"),
+            password=os.environ.get("DB_PASSWORD"),
+            database=os.environ.get("DB_NAME")
+        )
+    except mysql.connector.Error as err:
+        print(f"DB Connection Error: {err}")
+        return None
 
 @app.route("/")
 def index():
@@ -33,6 +38,11 @@ def login():
     hashed_pw = hashlib.sha256(admin_pw.encode()).hexdigest()
     
     conn = get_db_connection()
+
+    # DB 연결 실패 체크
+    if conn is None:
+        return "<h1>DB 연결 실패</h1>", 500
+        
     cursor = conn.cursor(dictionary=True)
     cursor.execute(
         "SELECT * FROM admins WHERE admin_id=%s AND admin_pw=%s",
