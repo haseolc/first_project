@@ -10,7 +10,6 @@ INSERT INTO admins (admin_id, admin_pw) VALUES
 ('admin', SHA2('ad123@', 256)),
 ('master', SHA2('ma555#', 256)),
 ('leader', SHA2('ldr445!', 256)),
-('security', SHA2('secu369@', 256)),
 ('db_admin', SHA2('dadm@511', 256)),
 ('k3s_manager', SHA2('km2253@', 256)),
 ('infra_manager', SHA2('ifm1246!', 256)),
