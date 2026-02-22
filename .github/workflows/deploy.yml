@@ -56,7 +56,6 @@ jobs:
           # $GITHUB_OUTPUT에 저장
           echo "EC2_PUBLIC_IP=$TEMP_IP" >> $GITHUB_OUTPUT
 
-
       # RDS endpoint 가져옴
       - name: Get RDS Endpoint
         id: get-rds
@@ -85,13 +84,13 @@ jobs:
          echo "[k3s_cluster]" > inventory.ini
          echo "${{ needs.terraform.outputs.EC2_PUBLIC_IP }} ansible_user=ec2-user ansible_ssh_private_key_file=/home/runner/.ssh/id_rsa" >> inventory.ini
 
-      # [단계 1] Ansible 실행 (클라이언트 도구 및 k3s 설치)
+      # Ansible 실행 (클라이언트 도구 및 k3s 설치)
       - name: Run Ansible (Install Tools & K3s)
         run: |
           cd ansible
           ansible-playbook -i inventory.ini site.yml -e "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" -e "rds_endpoint=${{ needs.terraform.outputs.RDS_ENDPOINT }}"
 
-      # [단계 2] DB 초기화 (앤서블이 설치한 mysql 명령어를 사용)
+      # DB 초기화 (앤서블이 설치한 mysql 명령어를 사용)
       - name: Initialize RDS Database
         run: |
           TARGET_IP=${{ needs.terraform.outputs.EC2_PUBLIC_IP }}
@@ -106,23 +105,9 @@ jobs:
           ssh -i /home/runner/.ssh/id_rsa ec2-user@$TARGET_IP \
             "mysql -h $RDS_ENDPOINT -u $DB_USER -p'$DB_PASS' < /home/ec2-user/init.sql"
 
-
-  
-      # [단계 3] 앱 새로고침 (DB 연결 보장)
+      # 앱 새로고침 (DB 연결 보장)
       - name: Refresh API Deployment
         run: |
           TARGET_IP=${{ needs.terraform.outputs.EC2_PUBLIC_IP }}
           ssh -i /home/runner/.ssh/id_rsa ec2-user@$TARGET_IP \
             "sudo /usr/local/bin/k3s kubectl rollout restart deployment myapi"
-
-      # GitHub Secret(DB_PASSWORD)을 K3s Secret으로 생성
-      #- name: Create Kubernetes DB Secret
-      #  run: |
-      #    TARGET_IP=${{ needs.terraform.outputs.EC2_PUBLIC_IP }}
-      #    DB_PASS=${{ secrets.DB_PASSWORD }}
-
-      #    ssh -i /home/runner/.ssh/id_rsa ec2-user@$TARGET_IP << EOF
-      #      sudo k3s kubectl create secret generic db-secret \
-      #        --from-literal=DB_PASSWORD="$DB_PASS" \
-      #        --dry-run=client -o yaml | sudo k3s kubectl apply -f -
-      #    EOF
