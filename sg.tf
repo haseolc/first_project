@@ -70,13 +70,13 @@ resource "aws_security_group" "web_sg" {
     security_groups = [aws_security_group.ssh_sg.id]
   }
 
-   ingress {
-    description = "Grafana NodePort"
-    from_port   = 30000
-    to_port     = 30000
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  #  ingress {
+  #   description = "Grafana NodePort"
+  #   from_port   = 30000
+  #   to_port     = 30000
+  #   protocol    = "tcp"
+  #   cidr_blocks = ["0.0.0.0/0"]
+  # }
   #아래 두 포트는 없어도 됩니다
   #ingress {
   #  description = "HTTP NodePort"
