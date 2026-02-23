@@ -91,7 +91,7 @@
     - { name: 'waf-dashboard' }
     - { name: 'node-dashboard' }
     - { name: 'k3s-dashboard' }
-    - { name: 'waf-dashboard2' }
+    - { name: '7th-room-waf-dashboard' }
 
 # 6. 복사된 파일을 이용해 ConfigMap 생성 및 배포 (Server-Side Apply 적용)
 - name: "멀티 대시보드 배포 (Nginx/Node/Cluster)"
@@ -105,7 +105,7 @@
     - { id: '9614', name: 'waf-dashboard' }
     - { id: '1860', name: 'node-dashboard' }
     - { id: '10856', name: 'k3s-dashboard' }
-    - { id: '14314', name: 'waf-dashboard2' }
+    - { id: '14314', name: '7th-room-waf-dashboard' }
 
   environment:
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
@@ -120,7 +120,7 @@
     - { name: 'waf-dashboard' }
     - { name: 'node-dashboard' }
     - { name: 'k3s-dashboard' }
-    - { name: 'waf-dashboard2' }
+    - { name: '7th-room-waf-dashboard' }
 
 
 - name: "monitoring 네임스페이스용 TLS 인증서 생성"

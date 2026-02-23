@@ -1,0 +1,94 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "type": "stat",
+      "title": "🛡️ WAF Security Blocks (403 Forbidden)",
+      "gridPos": { "h": 6, "w": 24, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          },
+          "unit": "none"
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false },
+        "textMode": "value"
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(nginx_ingress_controller_requests{status=\"403\", namespace=~\"$namespace\"}[5m]))",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "id": 8,
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "targets": [
+        {
+          "expr": "sum(increase(nginx_ingress_controller_requests{namespace=~\"$namespace\"}[$__range]))",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Requests (Period)",
+      "type": "stat"
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "namespace",
+        "type": "query",
+        "datasource": "Prometheus",
+        "definition": "label_values(nginx_ingress_controller_requests, namespace)",
+        "query": "label_values(nginx_ingress_controller_requests, namespace)",
+        "refresh": 1,
+        "includeAll": true,
+        "multi": true
+      },
+      {
+        "name": "ingress",
+        "type": "query",
+        "datasource": "Prometheus",
+        "definition": "label_values(nginx_ingress_controller_requests{namespace=~\"$namespace\"}, ingress)",
+        "query": "label_values(nginx_ingress_controller_requests{namespace=~\"$namespace\"}, ingress)",
+        "refresh": 1,
+        "includeAll": true,
+        "multi": true
+      }
+    ]
+  },
+  "title": "7th Room - WAF Security 관제탑",
+  "uid": "waf-security-dashboard-fixed",
+  "version": 1
+}
