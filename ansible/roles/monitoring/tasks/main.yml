@@ -25,14 +25,15 @@
     /usr/local/bin/helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
       --namespace monitoring \
       --set grafana.adminPassword=admin123 \
-      --set grafana.service.type=NodePort \
-      --set grafana.service.nodePort=30000 \
+      --set grafana.service.type=ClusterIP \
       --set "grafana.grafana\.ini.auth\.anonymous.enabled=true" \
       --set "grafana.grafana\.ini.auth\.anonymous.org_name=Main Org." \
       --set "grafana.grafana\.ini.auth\.anonymous.org_role=Admin" \
-      --set prometheus.prometheusSpec.retention=1d \
-      --set prometheus.prometheusSpec.resources.limits.memory=512Mi \
-      --set prometheus.prometheusSpec.resources.requests.memory=256Mi \
+      --set "grafana.grafana\.ini.server.root_url=http://{{ ec2_public_ip }}/grafana/" \
+      --set "grafana.grafana\.ini.server.serve_from_sub_path=true" \
+      --set prometheus.prometheusSpec.retention=2d \
+      --set prometheus.prometheusSpec.resources.limits.memory=700Mi \
+      --set prometheus.prometheusSpec.resources.requests.memory=300Mi \
       --set prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.accessModes={ReadWriteOnce} \
       --set prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage=5Gi \
       --set alertmanager.enabled=false \
@@ -40,7 +41,6 @@
       --set kube-state-metrics.resources.limits.memory=100Mi \
       --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false \
       --set prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues=false
-
   environment:
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
   changed_when: true
@@ -93,3 +93,48 @@
     - { name: 'node-dashboard' }
     - { name: 'k3s-dashboard' }
     - { name: 'waf-dashboard2' }
+
+
+- name: "monitoring 네임스페이스용 TLS 인증서 생성"
+  ansible.builtin.shell: |
+    # 임시 키 생성 (이미 있으면 생성 안함)
+    if [ ! -f /tmp/tls.key ]; then
+      openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /tmp/tls.key -out /tmp/tls.crt -subj "/CN=7th-room-waf"
+    fi
+    # monitoring 네임스페이스에 Secret 생성 (없으면 생성, 있으면 유지)
+    /usr/local/bin/kubectl create secret tls waf-tls-secret \
+      --cert=/tmp/tls.crt \
+      --key=/tmp/tls.key \
+      -n monitoring \
+      --dry-run=client -o yaml | /usr/local/bin/kubectl apply -f -
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  changed_when: false
+  
+- name: "Grafana용 Ingress (보안 통로) 생성"
+  ansible.builtin.shell: |
+    cat <<EOF | /usr/local/bin/kubectl apply -f -
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: grafana-ingress
+      namespace: monitoring
+      annotations:
+        nginx.ingress.kubernetes.io/enable-modsecurity: "true"
+    spec:
+      ingressClassName: nginx
+      tls:
+      - secretName: waf-tls-secret
+      rules:
+      - http:
+          paths:
+          - path: /grafana
+            pathType: Prefix
+            backend:
+              service:
+                name: prometheus-grafana
+                port:
+                  number: 80
+    EOF
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
