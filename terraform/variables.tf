@@ -43,7 +43,7 @@ variable "web_sg_name" {
 variable "instance_name" {
   description = "EC2 instance Name tag"
   type        = string
-  default     = "ec2-7th-room"
+  default     = "ec2-7th-room-02"
 }
 
 variable "environment" {
