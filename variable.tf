@@ -1,5 +1,4 @@
-variable "snapshot_id" {
-  description = "복구할 snapshot ID"
+variable "snapshot_name" {
+  description = "복구할 DB 스냅샷 이름"
   type        = string
-  default     = "temp"
 }
