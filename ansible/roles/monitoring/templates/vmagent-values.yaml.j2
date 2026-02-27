@@ -1,0 +1,47 @@
+remoteWrite:
+  - url: http://vmsingle:8428/api/v1/write   # ← 여기 수정
+
+resources:
+  limits:
+    memory: 150Mi
+  requests:
+    memory: 64Mi
+    cpu: 50m
+
+extraScrapeConfigs:
+
+  # 1. Node Exporter 수집 (서버 리소스용)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter-prometheus-node-exporter:9100']
+
+  # 2. Kubernetes pods by annotations
+  - job_name: kubernetes-pods-by-annotations
+    kubernetes_sd_configs:
+      - role: pod
+
+    relabel_configs:
+      # prometheus.io/scrape: "true" 인 pod만 수집
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+
+      # annotation에 정의된 포드로 address 재작성
+      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__
+
+      # path가 정의되어 있으면 사용
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+
+      # namespace / pod 라벨 추가 (대시보드 필터용)
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod

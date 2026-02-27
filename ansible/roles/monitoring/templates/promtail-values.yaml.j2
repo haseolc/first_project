@@ -1,0 +1,20 @@
+config:
+  clients:
+    - url: http://loki:3100/loki/api/v1/push
+  snippets:
+    extraScrapeConfigs: |
+      - job_name: ingress-nginx
+        kubernetes_sd_configs:
+          - role: pod
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+            regex: ingress-nginx
+            action: keep
+          - target_label: service
+            source_labels: [__meta_kubernetes_pod_name]
+
+resources:
+  limits:
+    memory: 128Mi
+  requests:
+    memory: 64Mi

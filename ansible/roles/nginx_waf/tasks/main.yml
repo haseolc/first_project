@@ -14,14 +14,15 @@
         dnsPolicy: ClusterFirstWithHostNet
         admissionWebhooks: { enabled: false }
         service: { type: ClusterIP }
-         # --- [추가된 Metrics 설정] ---
+        # --- [Metrics 설정 수정] ---
         metrics:
           enabled: true
           serviceMonitor:
-            enabled: true
-            additionalLabels:
-              # 앤서블 monitoring 역할에서 설치한 헬름 릴리즈 이름(prometheus)과 일치해야 함
-              release: prometheus 
+            # VictoriaMetrics Single은 ServiceMonitor CRD를 지원하지 않으므로 false로 설정
+            enabled: false
+        podAnnotations:
+          prometheus.io/scrape: "true"
+          prometheus.io/port: "10254"
         # ----------------------------
         # ★ [핵심 수정] 이 컨트롤러를 기본 인그레스 관리자로 지정
         ingressClassResource:
@@ -34,8 +35,19 @@
         config:
           enable-modsecurity: "true"
           enable-owasp-modsecurity-crs: "true"
+          # --- [과도한 접근 차단 설정 추가] ---
+          limit-req-status-code: "403"
+          use-forwarded-headers: "true"
+          # ---------------------------------
+          # ★ 여기에 적으면 모든 인그레스에 자동 적용됩니다!
+          log-format-upstream: >-
+            {"time": "$time_iso8601", "remote_addr": "$remote_addr", "host": "$host", 
+            "request": "$request", "status": "$status", "body_bytes_sent": "$body_bytes_sent", 
+            "request_time": "$request_time", "req_id": "$req_id"}
           modsecurity-snippet: |
             SecRuleEngine On
+            SecRuleRemoveById 920350
+            SecRuleRemoveById 911100
             SecRequestBodyAccess On
             SecAuditEngine RelevantOnly
             SecAuditLog /dev/stdout
@@ -48,3 +60,5 @@
     fi
     /usr/local/bin/kubectl create secret tls waf-tls-secret --cert=/tmp/tls.crt --key=/tmp/tls.key -n default --dry-run=client -o yaml | /usr/local/bin/kubectl apply -f -
   changed_when: false
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
