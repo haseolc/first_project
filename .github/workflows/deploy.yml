@@ -2,6 +2,10 @@ name: "7th-room-project-rds-recovery"
 
 on:
   workflow_dispatch: # 수동 실행 버튼
+    inputs:
+      snapshot_id:
+        description: '복구할 DB Snapshot name 입력'
+        required: true
 
 jobs:
   recovery:
@@ -25,7 +29,7 @@ jobs:
           TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
         run: |
           terraform init
-          terraform apply -auto-approve
+          terraform apply -auto-approve -var="snapshot_id=${{ github.event.inputs.snapshot_id }}" # 실행 시점에 snapshot_id 입력값 전달
           
           # 생성된 아웃풋 값들을 환경변수에 저장
           echo "NEW_RDS_ADDR=$(terraform output -raw rds_endpoint)" >> $GITHUB_ENV
