@@ -6,34 +6,16 @@ data "aws_vpc" "default" {
   default = true
 }
 
-resource "aws_security_group" "ssh_sg" {
-  name = "ssh_sg_7th_room"
+resource "aws_security_group" "ec2_sg" {
+  name = "ec2_sg_7th_room"
   vpc_id = data.aws_vpc.default.id
-  description = "관리자 SSH 접속"
 
   ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["0.0.0.0/0"] # GitHub Runner 배포 위해 전체 허용
   }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "ssh-sg-7th-room"
-  }
-}
-
-resource "aws_security_group" "web_sg" {
-  name = "web_sg_7th_room"
-  vpc_id = data.aws_vpc.default.id
-  description = "웹 서비스 및 내부 통신"
 
   ingress {
     from_port   = 80
@@ -59,14 +41,10 @@ resource "aws_security_group" "web_sg" {
   }
 
   tags = {
-    Name = "web-sg-7th-room"
+    Name = "ec2-sg-7th-room"
   }
 }
 
-output "ssh_sg_7th_room" {
-  value = aws_security_group.ssh_sg.id
-}
-
-output "web_sg_7th_room" {
-  value = aws_security_group.web_sg.id
+output "ec2_sg_7th_room" {
+  value = aws_security_group.ec2_sg.id
 }
