@@ -9,6 +9,7 @@ data "aws_vpc" "default" {
 resource "aws_security_group" "ssh_sg" {
   name = "ssh_sg_7th_room"
   vpc_id = data.aws_vpc.default.id
+  description = "관리자 SSH 접속"
 
   ingress {
     from_port   = 22
@@ -32,13 +33,7 @@ resource "aws_security_group" "ssh_sg" {
 resource "aws_security_group" "web_sg" {
   name = "web_sg_7th_room"
   vpc_id = data.aws_vpc.default.id
-
-  ingress {
-    from_port = 6443
-    to_port   = 6443
-    protocol  = "tcp"
-    self      = true
-  }
+  description = "웹 서비스 및 내부 통신"
 
   ingress {
     from_port   = 80
@@ -55,44 +50,6 @@ resource "aws_security_group" "web_sg" {
     cidr_blocks = ["0.0.0.0/0"]
     description = "Allow external HTTPS for WAF testing"
   }
-
-  ingress {
-    from_port = 0
-    to_port   = 0
-    protocol  = "-1"
-    self      = true
-  }
-
-  ingress {
-    from_port       = 22
-    to_port         = 22
-    protocol        = "tcp"
-    security_groups = [aws_security_group.ssh_sg.id]
-  }
-
-  #  ingress {
-  #   description = "Grafana NodePort"
-  #   from_port   = 30000
-  #   to_port     = 30000
-  #   protocol    = "tcp"
-  #   cidr_blocks = ["0.0.0.0/0"]
-  # }
-  #아래 두 포트는 없어도 됩니다
-  #ingress {
-  #  description = "HTTP NodePort"
-  #  from_port   = 30080
-  #  to_port     = 30080
-  #  protocol    = "tcp"
-  #  cidr_blocks = ["0.0.0.0/0"]
-  #}
-
-  #ingress {
-  #  description = "HTTPS NodePort"
-  #  from_port   = 30443
-  #  to_port     = 30443
-  #  protocol    = "tcp"
-  #  cidr_blocks = ["0.0.0.0/0"]
-  #}
 
   egress {
     from_port   = 0
