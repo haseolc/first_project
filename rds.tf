@@ -8,18 +8,14 @@ variable "db_password" {
   sensitive   = true # 민감 정보
 }
 
-# 기존(Default) VPC 정보 조회
+# 기존 VPC 조회
 data "aws_vpc" "default" {
   default = true
 }
 
-# 외부 보안 그룹 2개 정보 조회 (이름으로 ID 찾아오기)
-data "aws_security_group" "ssh_sg" {
-  name = "ssh_sg_7th_room"
-}
-
-data "aws_security_group" "web_sg" {
-  name = "web_sg_7th_room"
+# 외부 보안 그룹 조회
+data "aws_security_group" "ec2_sg" {
+  name = "ec2_sg_7th_room"
 }
 
 # RDS용 프라이빗 서브넷 2개 생성
@@ -49,10 +45,7 @@ resource "aws_security_group" "rds_sg" {
     from_port       = 3306
     to_port         = 3306
     protocol        = "tcp"
-    security_groups = [
-      data.aws_security_group.ssh_sg.id,
-      data.aws_security_group.web_sg.id
-    ]
+    security_groups = [data.aws_security_group.ssh_ec2.id]
   }
 
   tags = {
