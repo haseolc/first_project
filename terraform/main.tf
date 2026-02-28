@@ -1,9 +1,5 @@
-data "aws_security_group" "ssh_sg" {
-  name = var.ssh_sg_name
-}
-
-data "aws_security_group" "web_sg" {
-  name = var.web_sg_name
+data "aws_security_group" "ec2_sg" {
+  name = var.ec2_sg_name
 }
 
 resource "aws_instance" "ec2_7th_room" {
@@ -14,10 +10,7 @@ resource "aws_instance" "ec2_7th_room" {
 
   subnet_id = data.aws_subnets.public_az_a.ids[0]
 
-  vpc_security_group_ids = [
-    data.aws_security_group.ssh_sg.id,
-    data.aws_security_group.web_sg.id
-  ]
+  vpc_security_group_ids = [data.aws_security_group.ec2_sg.id]
 
   root_block_device {
     volume_size           = 20
@@ -30,16 +23,6 @@ resource "aws_instance" "ec2_7th_room" {
       Name = "${var.instance_name}_root_volume"
     }
   }
-
-  # # MySQL client 설치
-  # user_data = <<-EOF
-  #             #!/bin/bash
-  #             sudo dnf update -y #항상 업데이트가 먼저인데 왜 중간에 들어가 있었는지 모르겠음
-  #             sudo dnf install -y wget
-  #             sudo wget https://dev.mysql.com/get/mysql80-community-release-el9-1.noarch.rpm
-  #             sudo dnf install -y mysql80-community-release-el9-1.noarch.rpm
-  #             sudo dnf install -y mysql-community-client
-  #             EOF
 
   tags = {
     Name        = var.instance_name
