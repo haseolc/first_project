@@ -25,13 +25,6 @@ data "aws_vpc" "default" { default = true }
 data "aws_security_group" "rds_sg" { name = "rds_sg_7th_room" }
 data "aws_db_subnet_group" "rds_subnet_group" { name = "rds-subnet-group" }
 
-# 최신 수동 스냅샷 조회
-#data "aws_db_snapshot" "latest_manual" {
-#  db_instance_identifier = "rds-7th-room" # 원본 DB 식별자
-#  most_recent            = true
-#  snapshot_type          = "manual" # 수동 스냅샷 기준
-#}
-
 # DR용 RDS 스냅샷 복구 (데이터, DB 구조, 사용자, 비밀번호, 엔진/버전 모두 스냅샷 기준으로 복원)
 resource "aws_db_instance" "db_7th_room_dr" {
   identifier             = "rds-7th-room-dr"
