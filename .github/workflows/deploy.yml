@@ -4,7 +4,7 @@ on:
   workflow_dispatch: # 수동 실행 버튼
     inputs:
       snapshot_name:
-        description: '복구할 DB Snapshot name 입력'
+        description: '복구 대상 RDS Snapshot 지정'
         required: true
 
 jobs:
