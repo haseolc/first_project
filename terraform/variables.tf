@@ -28,16 +28,10 @@ variable "associate_public_ip" {
   default     = true
 }
 
-variable "ssh_sg_name" {
-  description = "SSH access Security Group name"
+variable "ec2_sg_name" {
+  description = "Security Group name"
   type        = string
-  default     = "ssh_sg_7th_room"
-}
-
-variable "web_sg_name" {
-  description = "Web/cluster traffic Security Group name"
-  type        = string
-  default     = "web_sg_7th_room"
+  default     = "ec2_sg_7th_room"
 }
 
 variable "instance_name" {
