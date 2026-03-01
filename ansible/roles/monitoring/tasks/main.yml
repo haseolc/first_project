@@ -1,5 +1,5 @@
 ---
-# 1. 네임스페이스 및 레포지토리 준비
+# 네임스페이스 및 레포지토리 준비
 - name: "모니터링 네임스페이스 생성"
   ansible.builtin.shell: /usr/local/bin/kubectl create namespace monitoring || true
   environment: { KUBECONFIG: /etc/rancher/k3s/k3s.yaml }
@@ -12,7 +12,7 @@
     /usr/local/bin/helm repo update
   environment: { KUBECONFIG: /etc/rancher/k3s/k3s.yaml }
 
-# 2. EC2 공인 IP 정보 수집
+# EC2 공인 IP 정보 수집
 - name: "EC2 공인 IP 정보 수집"
   block:
     - name: "IMDSv2 토큰 가져오기"
@@ -35,7 +35,7 @@
       ansible.builtin.set_fact:
         ec2_public_ip: "{{ ec2_public_ipv4_response.content }}"
 
-# 3. Node Exporter 설치 (Annotation 에러 해결을 위해 --set-string 사용)
+# Node Exporter 설치 (Annotation 에러 해결을 위해 --set-string 사용)
 - name: "Prometheus Node Exporter 설치"
   ansible.builtin.shell: |
     /usr/local/bin/helm upgrade --install node-exporter prometheus-community/prometheus-node-exporter \
@@ -57,7 +57,7 @@
       --set server.persistentVolume.enabled=false
   environment: { KUBECONFIG: /etc/rancher/k3s/k3s.yaml }
 
-# 4. VMAgent 설치
+# VMAgent 설치
 - name: "VMAgent 설치"
   ansible.builtin.shell: |
     /usr/local/bin/helm upgrade --install vmagent vm/victoria-metrics-agent \
@@ -67,7 +67,7 @@
       --set resources.limits.memory=120Mi
   environment: { KUBECONFIG: /etc/rancher/k3s/k3s.yaml }
 
-# 5. Grafana 설치 (익명 로그인 + 데이터 소스 UID 강제 지정)
+# Grafana 설치 (익명 로그인 + 데이터 소스 UID 강제 지정)
 - name: "Grafana 설치 (익명 뷰어 모드)"
   ansible.builtin.shell: |
     /usr/local/bin/helm upgrade --install grafana grafana/grafana \
@@ -124,14 +124,7 @@
       --set "singleBinary.extraVolumeMounts[0].name=storage" \
       --set "singleBinary.extraVolumeMounts[0].mountPath=/var/loki"
   environment: { KUBECONFIG: /etc/rancher/k3s/k3s.yaml }
-# 7. Promtail 설치 (문법 에러 방지를 위해 설정 단순화)
-# - name: "Promtail 설치 (YAML 문법 수정)"
-#   ansible.builtin.shell: |
-#     /usr/local/bin/helm upgrade --install promtail grafana/promtail \
-#       --namespace monitoring \
-#       --set "config.clients[0].url=http://loki:3100/loki/api/v1/push" \
-#       --set "resources.limits.memory=100Mi"
-#   environment: { KUBECONFIG: /etc/rancher/k3s/k3s.yaml }
+
 - name: "Promtail values 파일 생성"
   ansible.builtin.template:
     src: promtail-values.yaml.j2
@@ -145,7 +138,8 @@
       -f /tmp/promtail-values.yaml
   environment:
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
-# 8. 대시보드 배포 (에러 해결을 위한 모든 변수 매핑)
+    
+# 대시보드 배포 (에러 해결을 위한 모든 변수 매핑)
 - name: "대시보드 파일 배포 프로세스"
   block:
     - name: "JSON 템플릿 전송"
@@ -177,7 +171,7 @@
       loop: *dashboard_items
       environment: { KUBECONFIG: /etc/rancher/k3s/k3s.yaml }
 
-# 9. Ingress 및 TLS 설정
+# Ingress 및 TLS 설정
 - name: "Grafana용 Ingress 생성"
   ansible.builtin.shell: |
     cat <<EOF | /usr/local/bin/kubectl apply -f -
@@ -206,7 +200,7 @@
   environment:
     KUBECONFIG: /etc/rancher/k3s/k3s.yaml
 
-# 10. 임시 파일 삭제
+# 임시 파일 삭제
 - name: "임시 파일 삭제"
   ansible.builtin.file:
     path: "/tmp/{{ item.name }}.json"
