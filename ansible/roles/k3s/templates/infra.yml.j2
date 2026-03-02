@@ -1,4 +1,14 @@
 ---
+# Congigmap (Secret과 분리된 일반 설정값 관리)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-config
+data:
+  DB_USER: admin
+  DB_NAME: admin_db
+
+---
 # Flask API Deployment
 apiVersion: apps/v1
 kind: Deployment
@@ -21,11 +31,11 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 5000
+
+        # 환경변수 설정
         env:
         - name: DB_HOST
           value: db # RDS 연결용 ExternalName 서비스 참조
-        - name: DB_USER
-          value: admin
 
         # main.yml에서 생성한 Kubernetes Secret 사용
         - name: DB_PASSWORD # app.py에서 참조
@@ -33,9 +43,11 @@ spec:
             secretKeyRef:
               name: db-secret
               key: DB_PASSWORD
-              
-        - name: DB_NAME
-          value: admin_db
+
+        # Configmap에서 설정값 불러오기
+        envFrom:
+        - configMapRef:
+            name: db-config
 
 ---
 # API 내부 Service
@@ -51,8 +63,8 @@ spec:
   - protocol: TCP
     port: 80
     targetPort: 5000    
+    
 ---
-
 # DB 연결용 이정표 (ExternalName)
 # rds-dr 브랜치의 patch 명령어 작동
 apiVersion: v1
@@ -88,4 +100,3 @@ spec:
             name: myapi
             port:
               number: 80
-
