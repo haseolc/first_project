@@ -14,7 +14,8 @@ resource "aws_security_group" "ec2_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # GitHub Runner 배포 위해 전체 허용
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "GitHub Actions 러너의 동적 IP 특성으로 인해 SSH 전체 허용"
   }
 
   ingress {
@@ -22,7 +23,6 @@ resource "aws_security_group" "ec2_sg" {
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow external HTTP for WAF testing"
   }
 
   ingress {
@@ -30,7 +30,6 @@ resource "aws_security_group" "ec2_sg" {
     to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow external HTTPS for WAF testing"
   }
 
   egress {
