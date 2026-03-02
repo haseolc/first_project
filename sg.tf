@@ -15,7 +15,7 @@ resource "aws_security_group" "ec2_sg" {
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "GitHub Actions 러너의 동적 IP 특성으로 인해 SSH 전체 허용"
+    description = "Allow SSH for GitHub Actions"
   }
 
   ingress {
