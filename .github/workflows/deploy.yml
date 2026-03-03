@@ -101,7 +101,7 @@ jobs:
           # init.sql 전송
           scp -i /home/runner/.ssh/id_rsa ./init.sql ec2-user@$TARGET_IP:/home/ec2-user/init.sql
 
-             # SSH로 접속해서 MySQL 실행 (변수를 인라인으로 전달)
+          # SSH로 접속해서 MySQL 실행 (변수를 인라인으로 전달)
           ssh -i /home/runner/.ssh/id_rsa ec2-user@$TARGET_IP \
             "mysql -h $RDS_ENDPOINT -u $DB_USER -p'$DB_PASS' < /home/ec2-user/init.sql"
 
